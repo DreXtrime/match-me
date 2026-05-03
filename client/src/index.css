@@ -1,0 +1,137 @@
+:root {
+  font-family: 'Sora', 'Inter', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: #eef2ff;
+  background-color: #08101d;
+
+  --background: #08101d;
+  --surface: rgba(17, 24, 39, 0.95);
+  --surface-light: rgba(26, 35, 59, 0.9);
+  --surface-strong: rgba(12, 20, 34, 0.98);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #eef2ff;
+  --muted: #9bb2d6;
+  --primary: #7c98ff;
+  --primary-soft: rgba(124, 152, 255, 0.18);
+  --danger: #f76969;
+  --success: #44d190;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(124, 152, 255, 0.18), transparent 22%),
+    radial-gradient(circle at bottom right, rgba(164, 89, 255, 0.14), transparent 20%),
+    linear-gradient(180deg, #02060f 0%, #08101d 100%);
+  color: var(--text);
+}
+
+#root {
+  width: 100%;
+  flex: 1;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  border-radius: 16px;
+  border: 1px solid transparent;
+  padding: 0.85em 1.4em;
+  font-size: 1em;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--primary), #536dff);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 18px 40px rgba(79, 134, 255, 0.18);
+  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  opacity: 0.98;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid rgba(124, 152, 255, 0.7);
+  outline-offset: 3px;
+}
+
+input,
+select,
+textarea {
+  background-color: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 0.95rem 1rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(124, 152, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  opacity: 0.9;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label {
+  color: var(--text);
+}
+
+::selection {
+  background: rgba(124, 152, 255, 0.35);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid rgba(124, 152, 255, 0.7);
+    outline-offset: 3px;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}
