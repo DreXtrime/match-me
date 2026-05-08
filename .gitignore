@@ -5,6 +5,11 @@ server/node_modules/
 # Build output
 client/dist/
 server/dist/
+dist/
+build/
+out/
+target/
+
 
 # Logs
 *.log
@@ -15,3 +20,37 @@ server/dist/
 # OS files
 .DS_Store
 Thumbs.db
+HELP.md
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### ZED ###
+.zed/
+
+### VS Code ###
+.vscode/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
