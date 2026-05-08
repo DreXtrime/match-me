@@ -20,8 +20,6 @@ The following enums are used across bio endpoints:
 
 "music_genres": "rock" | "pop" | "hiphop" | "electronic" | "jazz" | "classical" | "metal" | "indie"
 
-"activity_level": "low" | "moderate" | "high"
-
 "relationship_goal": "friendship" | "dating" | "networking" | "activity"
 
 "age": number
