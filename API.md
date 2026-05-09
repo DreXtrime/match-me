@@ -23,6 +23,7 @@ The following enums are used across bio endpoints:
 "relationship_goal": "friendship" | "dating" | "networking" | "activity"
 
 "age": number
+
 ```
 
 ---
@@ -101,7 +102,9 @@ The following enums are used across bio endpoints:
     "last_name": "string",
     "about_me": "string",
     "profile_picture": "string | null",
-    "city": "string"
+    "max_distance_km": "number",
+    "longitude": "number",
+    "latitude": "number"
   }
   ```
 
@@ -115,7 +118,7 @@ The following enums are used across bio endpoints:
   ```json
   {
     "id": "uuid",
-    "age": 25,
+    "age": number,
     "interests": ["string"],
     "friday_night_activities": ["string"],
     "music_genres": ["string"],
@@ -136,7 +139,9 @@ The following enums are used across bio endpoints:
     "last_name": "string",
     "about_me": "string",
     "profile_picture": "string | null",
-    "city": "string"
+    "max_distance_km": "number",
+    "longitude": "number",
+    "latitude": "number"
   }
   ```
 - **Response**:
@@ -154,7 +159,7 @@ The following enums are used across bio endpoints:
 - **Request Body**:
   ```json
   {
-    "age": 25,
+    "age": number,
     "interests": ["string"],
     "friday_night_activities": ["string"],
     "music_genres": ["string"],
@@ -203,7 +208,6 @@ The following enums are used across bio endpoints:
     "last_name": "string",
     "about_me": "string",
     "profile_picture": "string | null",
-    "city": "string"
   }
   ```
 - **Error Response**:
