@@ -83,7 +83,7 @@ The following enums are used across bio endpoints:
   {
     "id": "uuid",
     "name": "string",
-    "profile_picture": "string | null"
+    "profile_picture": "string"
   }
   ```
 
@@ -101,7 +101,7 @@ The following enums are used across bio endpoints:
     "first_name": "string",
     "last_name": "string",
     "about_me": "string",
-    "profile_picture": "string | null",
+    "profile_picture": "string",
     "max_distance_km": "number",
     "longitude": "number",
     "latitude": "number"
@@ -138,7 +138,6 @@ The following enums are used across bio endpoints:
     "first_name": "string",
     "last_name": "string",
     "about_me": "string",
-    "profile_picture": "string | null",
     "max_distance_km": "number",
     "longitude": "number",
     "latitude": "number"
@@ -185,7 +184,7 @@ The following enums are used across bio endpoints:
   {
     "id": "uuid",
     "name": "string",
-    "profile_picture": "string | null"
+    "profile_picture": "string"
   }
   ```
 - **Error Response**:
@@ -207,7 +206,7 @@ The following enums are used across bio endpoints:
     "first_name": "string",
     "last_name": "string",
     "about_me": "string",
-    "profile_picture": "string | null",
+    "profile_picture": "string"
   }
   ```
 - **Error Response**:
@@ -467,7 +466,7 @@ The API returns standard HTTP status codes. Common error responses include:
 
 - `400 Bad Request`: Invalid request data
 - `401 Unauthorized`: Missing or invalid authentication
-`403 Forbidden`: Insufficient permissions
+- `403 Forbidden`: Insufficient permissions
 - `404 Not Found`: Resource not found or user does not have permission to view it
 - `500 Internal Server Error`: Server error
 
