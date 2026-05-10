@@ -10,7 +10,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - matchme-postgres-data:/var/lib/postgresql
+      - matchme-andreas-postgres-data:/var/lib/postgresql
 
 volumes:
-  matchme-postgres-data:
+  matchme-andreas-postgres-data:
