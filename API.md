@@ -1,13 +1,13 @@
 # Match-Me API Documentation
 
-documentation for the Match-Me backend API endpoints
+Documentation for the Match-Me backend API endpoints.
 
 ## Authentication
 Most endpoints require authentication via JWT token in the Authorization header:
 ```
 Authorization: Bearer <token>
 ```
-Tokens are obtained from the login endpoint.
+Tokens are obtained from the login/register endpoint.
 
 ## Match Data Points
 
@@ -16,14 +16,13 @@ The following enums are used across bio endpoints:
 ```
 "interests": "gaming" | "fitness" | "music" | "programming" | "art" | "reading" | "travel" | "food" | "movies" | "sports"
 
-"friday_night_activities": "bar_hopping" | "house_party" | "gaming" | "movies_at_home" | "restaurant" | "clubbing" | "board_games" | "concert" | "takeaway_and_chill" | "outdoor_bonfire"
+"fridayNightActivities": "bar_hopping" | "house_party" | "gaming" | "movies_at_home" | "restaurant" | "clubbing" | "board_games" | "concert" | "takeaway_and_chill" | "outdoor_bonfire"
 
-"music_genres": "rock" | "pop" | "hiphop" | "electronic" | "jazz" | "classical" | "metal" | "indie"
+"musicGenres": "rock" | "pop" | "hiphop" | "electronic" | "jazz" | "classical" | "metal" | "indie"
 
-"relationship_goal": "friendship" | "dating" | "networking" | "activity"
+"relationshipGoal": "friendship" | "dating" | "networking" | "activity"
 
 "age": number
-
 ```
 
 ---
@@ -46,7 +45,7 @@ The following enums are used across bio endpoints:
   ```
 - **Error Response**:
   ```json
-  { "error": "Email already in use" }
+  { "message": "Email already in use" }
   ```
 - **Status Codes**: 201 Created, 400 Bad Request
 
@@ -66,7 +65,7 @@ The following enums are used across bio endpoints:
   ```
 - **Error Response**:
   ```json
-  { "error": "Invalid credentials" }
+  { "message": "Invalid credentials" }
   ```
 - **Status Codes**: 200 OK, 401 Unauthorized
 
@@ -83,7 +82,7 @@ The following enums are used across bio endpoints:
   {
     "id": "uuid",
     "name": "string",
-    "profile_picture": "string"
+    "profilePicture": "string"
   }
   ```
 
@@ -98,13 +97,13 @@ The following enums are used across bio endpoints:
   {
     "id": "uuid",
     "email": "string",
-    "first_name": "string",
-    "last_name": "string",
-    "about_me": "string",
-    "profile_picture": "string",
-    "max_distance_km": "number",
-    "longitude": "number",
-    "latitude": "number"
+    "firstName": "string",
+    "lastName": "string",
+    "aboutMe": "string",
+    "profilePicture": "string",
+    "maxDistanceKm": "number",
+    "latitude": "number",
+    "longitude": "number"
   }
   ```
 
@@ -118,11 +117,11 @@ The following enums are used across bio endpoints:
   ```json
   {
     "id": "uuid",
-    "age": number,
+    "age": 25,
     "interests": ["string"],
-    "friday_night_activities": ["string"],
-    "music_genres": ["string"],
-    "relationship_goal": "friendship"
+    "fridayNightActivities": ["string"],
+    "musicGenres": ["string"],
+    "relationshipGoal": "friendship"
   }
   ```
 
@@ -135,12 +134,12 @@ The following enums are used across bio endpoints:
 - **Request Body**:
   ```json
   {
-    "first_name": "string",
-    "last_name": "string",
-    "about_me": "string",
-    "max_distance_km": "number",
-    "longitude": "number",
-    "latitude": "number"
+    "firstName": "string",
+    "lastName": "string",
+    "aboutMe": "string",
+    "maxDistanceKm": 50,
+    "latitude": null,
+    "longitude": null
   }
   ```
 - **Response**:
@@ -158,11 +157,11 @@ The following enums are used across bio endpoints:
 - **Request Body**:
   ```json
   {
-    "age": number,
-    "interests": ["string"],
-    "friday_night_activities": ["string"],
-    "music_genres": ["string"],
-    "relationship_goal": "friendship"
+    "age": 25,
+    "interests": ["gaming", "fitness"],
+    "fridayNightActivities": ["bar_hopping", "gaming"],
+    "musicGenres": ["rock", "pop"],
+    "relationshipGoal": "friendship"
   }
   ```
 - **Response**:
@@ -184,12 +183,12 @@ The following enums are used across bio endpoints:
   {
     "id": "uuid",
     "name": "string",
-    "profile_picture": "string"
+    "profilePicture": "string"
   }
   ```
 - **Error Response**:
   ```json
-  { "error": "Not found" }
+  { "message": "Not found" }
   ```
 - **Status Codes**: 200 OK, 404 Not Found
 
@@ -197,21 +196,21 @@ The following enums are used across bio endpoints:
 
 #### Get User Profile by ID
 - **Endpoint**: `GET /users/:id/profile`
-- **Description**: Get a user's about me information. No email is returned. Returns 404 if not permitted to view.
+- **Description**: Get a users about me information. No email is returned. Returns 404 if not permitted to view.
 - **Auth Required**: Yes
 - **Response**:
   ```json
   {
     "id": "uuid",
-    "first_name": "string",
-    "last_name": "string",
-    "about_me": "string",
-    "profile_picture": "string"
+    "firstName": "string",
+    "lastName": "string",
+    "aboutMe": "string",
+    "profilePicture": "string"
   }
   ```
 - **Error Response**:
   ```json
-  { "error": "Not found" }
+  { "message": "Not found" }
   ```
 - **Status Codes**: 200 OK, 404 Not Found
 
@@ -227,14 +226,14 @@ The following enums are used across bio endpoints:
     "id": "uuid",
     "age": 25,
     "interests": ["string"],
-    "music_genres": ["string"],
-    "friday_night_activities": ["string"],
-    "relationship_goal": "friendship"
+    "fridayNightActivities": ["string"],
+    "musicGenres": ["string"],
+    "relationshipGoal": "friendship"
   }
   ```
 - **Error Response**:
   ```json
-  { "error": "Not found" }
+  { "message": "Not found" }
   ```
 - **Status Codes**: 200 OK, 404 Not Found
 
@@ -252,7 +251,7 @@ The following enums are used across bio endpoints:
   ```
 - **Error Response**:
   ```json
-  { "error": "Complete your profile before viewing recommendations" }
+  { "message": "Complete your profile before viewing recommendations" }
   ```
 - **Status Codes**: 200 OK, 400 Bad Request
 
@@ -304,7 +303,7 @@ The following enums are used across bio endpoints:
   ```
 - **Error Response**:
   ```json
-  { "error": "Already requested or connected" }
+  { "message": "Already requested or connected" }
   ```
 - **Status Codes**: 201 Created, 400 Bad Request
 
@@ -336,127 +335,13 @@ The following enums are used across bio endpoints:
 
 #### Delete Connection
 - **Endpoint**: `DELETE /connections/:id`
-- **Description**: Disconnect from an accepted connection.
+- **Description**: Disconnect from an accepted connection. The user will not be recommended again.
 - **Auth Required**: Yes
 - **Response**:
   ```json
   { "message": "Disconnected" }
   ```
 - **Status Codes**: 200 OK
-
----
-
-### Chat
-
-#### Get Chats
-- **Endpoint**: `GET /chats`
-- **Description**: Get all chat conversations ordered by most recent. Includes unread count per chat.
-- **Auth Required**: Yes
-- **Response**:
-  ```json
-  {
-    "chats": [
-      {
-        "user_id": "uuid",
-        "unread_count": "number"
-      }
-    ]
-  }
-  ```
-
----
-
-#### Get Chat Messages
-- **Endpoint**: `GET /chats/:userId`
-- **Description**: Get paginated message history between the current user and another user. Must be connected.
-- **Auth Required**: Yes
-- **Query Params**:
-  - `page` (default: 1)
-  - `limit` (default: 20)
-- **Response**:
-  ```json
-  {
-    "messages": [
-      {
-        "id": "uuid",
-        "sender_id": "uuid",
-        "content": "string",
-        "is_read": "boolean",
-        "created_at": "timestamp"
-      }
-    ],
-    "page": "number",
-    "total_pages": "number"
-  }
-  ```
-- **Error Response**:
-  ```json
-  { "error": "Not found" }
-  ```
-- **Status Codes**: 200 OK, 404 Not Found
-
----
-
-## WebSocket Events
-
-### Connection
-WebSocket connections require a JWT token passed in the handshake auth:
-```
-socket.handshake.auth.token
-```
-
----
-
-#### Send Message
-- **Client emits**: `message:send`
-- **Payload**:
-  ```json
-  { "receiver_id": "uuid", "content": "string" }
-  ```
-- **Server emits to recipient**: `message:receive`
-- **Payload**:
-  ```json
-  {
-    "id": "uuid",
-    "sender_id": "uuid",
-    "content": "string",
-    "created_at": "timestamp"
-  }
-  ```
-
----
-
-#### Typing Indicator
-- **Client emits**: `typing:start` or `typing:stop`
-- **Payload**:
-  ```json
-  { "receiver_id": "uuid" }
-  ```
-- **Server emits to recipient**: `typing:indicator`
-- **Payload**:
-  ```json
-  { "sender_id": "uuid", "typing": "boolean" }
-  ```
-
----
-
-#### Online Status Init
-- **Server emits on connect**: `online:init`
-- **Description**: Immediately sent to the client on socket connection with the online status of all their connections.
-- **Payload**:
-  ```json
-  { "online_users": ["uuid"] }
-  ```
-
----
-
-#### Online Status Change
-- **Server emits**: `user:online`
-- **Description**: Sent when any connection's online status changes.
-- **Payload**:
-  ```json
-  { "user_id": "uuid", "online": "boolean" }
-  ```
 
 ---
 
@@ -471,8 +356,9 @@ The API returns standard HTTP status codes. Common error responses include:
 - `500 Internal Server Error`: Server error
 
 > `/users/:id` endpoints return 404 for both "not found" and "not permitted to view" intentionally. This avoids confirming that a user exists to someone who should not see them.
-- Logout is handled client-side by discarding the JWT, no server endpoint needed
-- Pagination uses `page` and `limit` query parameters
-- WebSocket connections require JWT token in `socket.handshake.auth.token`
+
+## Notes
+
+- Logout is handled client-side by discarding the JWT
 - Dates are returned in ISO 8601 format
 - Profile visibility is restricted: profiles are only viewable if the user is recommended, has a pending connection request, or is connected
