@@ -4,8 +4,8 @@ A recommendation platform that connects users based on multiple datapoints.
 
 ## Tech Stack
 
-**Backend**: Java 21, Spring Boot, PostgreSQL
-**Frontend**: React, TypeScript, Vite
+**Backend**: Java 21, Spring Boot, PostgreSQL  
+**Frontend**: React, TypeScript, Vite  
 **Auth**: JWT + bcrypt
 
 ## Notable Decisions
