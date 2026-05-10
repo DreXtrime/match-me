@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: matchme-andreas-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: matchme
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - matchme-postgres-data:/var/lib/postgresql
+
+volumes:
+  matchme-postgres-data:
