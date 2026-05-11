@@ -68,7 +68,7 @@ Spring Boot will create all database tables automatically on first run.
 
 Enable user seeding by the two .env variables:
 ```bash
-SEED_DATABASE=false
+SEED_DATABASE=true
 SEED_USER_COUNT=200
 ```
 
