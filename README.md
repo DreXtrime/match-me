@@ -63,6 +63,21 @@ sudo -u postgres createuser --superuser your_username
 ```
 
 Spring Boot will create all database tables automatically on first run.
+
+## Mock User Seeding
+
+Enable user seeding by the two .env variables:
+```bash
+SEED_DATABASE=false
+SEED_USER_COUNT=200
+```
+
+Wipe the database on every launch using:
+```bash
+DDL_AUTO=create
+```
+
+
 ## API
 
 API.md for full endpoint documentation.
