@@ -88,9 +88,12 @@ public class RecommendationService {
 
     private boolean isWithinDistance(Profile requester, Profile candidate) {
         if (requester.getLatitude() == null || requester.getLongitude() == null
-                || requester.getMaxDistanceKm() == null
-                || candidate.getLatitude() == null || candidate.getLongitude() == null) {
+                || requester.getMaxDistanceKm() == null) {
             return true;
+        }
+
+        if (candidate.getLatitude() == null || candidate.getLongitude() == null) {
+            return false;
         }
 
         double distance = GeoUtils.calculateDistance(
