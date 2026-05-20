@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -71,19 +72,11 @@ public class RecommendationService {
     }
 
     private Set<UUID> getDismissedIds(UUID userId) {
-        return dismissedRepository.findByUserId(userId)
-                .stream()
-                .map(d -> d.getDismissedUser().getId())
-                .collect(Collectors.toSet());
+        return dismissedRepository.findDismissedUserIds(userId);
     }
 
     private Set<UUID> getConnectionIds(UUID userId) {
-        return connectionRepository.findByUserIdAndStatuses(userId, List.of("accepted", "pending"))
-                .stream()
-                .map(c -> c.getRequester().getId().equals(userId)
-                        ? c.getReceiver().getId()
-                        : c.getRequester().getId())
-                .collect(Collectors.toSet());
+        return new HashSet<>(connectionRepository.findPartnerIdsByStatuses(userId, List.of("accepted", "pending")));
     }
 
     private boolean isWithinDistance(Profile requester, Profile candidate) {

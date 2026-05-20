@@ -6,7 +6,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "messages")
+@Table(name = "messages", indexes = {
+        @Index(name = "idx_message_sender", columnList = "sender_id"),
+        @Index(name = "idx_message_receiver", columnList = "receiver_id"),
+        @Index(name = "idx_message_receiver_read", columnList = "receiver_id,is_read")
+})
 @Getter
 @Setter
 @NoArgsConstructor

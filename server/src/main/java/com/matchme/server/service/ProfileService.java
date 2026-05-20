@@ -5,6 +5,7 @@ import com.matchme.server.dto.request.UpdateProfileRequest;
 import com.matchme.server.dto.response.SimpleResponse;
 import com.matchme.server.exception.BadRequestException;
 import com.matchme.server.exception.NotFoundException;
+import com.matchme.server.mapper.ServerMapper;
 import com.matchme.server.model.Dismissed;
 import com.matchme.server.model.Profile;
 import com.matchme.server.model.User;
@@ -13,10 +14,10 @@ import com.matchme.server.repository.ProfileRepository;
 import com.matchme.server.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +26,9 @@ public class ProfileService {
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
     private final DismissedRepository dismissedRepository;
+    private final ServerMapper mapper;
 
+    @Transactional
     public SimpleResponse updateProfile(UUID userId, UpdateProfileRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
@@ -38,57 +41,25 @@ public class ProfileService {
         }
 
         profile.setUser(user);
-        profile.setFirstName(request.firstName());
-        profile.setLastName(request.lastName());
-        profile.setAboutMe(request.aboutMe());
-        profile.setProfilePictureUrl(request.profilePictureUrl());
-        profile.setMaxDistanceKm(request.maxDistanceKm());
-        profile.setLatitude(request.latitude());
-        profile.setLongitude(request.longitude());
+        mapper.updateProfileFromRequest(request, profile);
 
         profileRepository.save(profile);
         return new SimpleResponse("Updated");
     }
 
+    @Transactional
     public SimpleResponse updateBio(UUID userId, UpdateBioRequest request) {
         Profile profile = profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new NotFoundException("Complete your profile before updating bio"));
 
-        if (request.interests() != null && request.interests().size() > 0) {
-            if (hasDuplicates(request.interests())) {
-                throw new BadRequestException("Duplicate values are not allowed");
-            }
-            profile.setInterests(request.interests().stream()
-                    .map(Enum::name)
-                    .collect(Collectors.toList()));
-        }
+        if (request.interests() != null && hasDuplicates(request.interests()))
+            throw new BadRequestException("Duplicate values are not allowed");
+        if (request.fridayNightActivities() != null && hasDuplicates(request.fridayNightActivities()))
+            throw new BadRequestException("Duplicate values are not allowed");
+        if (request.musicGenres() != null && hasDuplicates(request.musicGenres()))
+            throw new BadRequestException("Duplicate values are not allowed");
 
-        if (request.age() != null) {
-            profile.setAge(request.age());
-        }
-
-        if (request.fridayNightActivities() != null && request.fridayNightActivities().size() > 0) {
-            if (hasDuplicates(request.fridayNightActivities())) {
-                throw new BadRequestException("Duplicate values are not allowed");
-            }
-            profile.setFridayNightActivities(request.fridayNightActivities().stream()
-                    .map(Enum::name)
-                    .collect(Collectors.toList()));
-        }
-
-        if (request.musicGenres() != null && request.musicGenres().size() > 0) {
-            if (hasDuplicates(request.musicGenres())) {
-                throw new BadRequestException("Duplicate values are not allowed");
-            }
-            profile.setMusicGenres(request.musicGenres().stream()
-                    .map(Enum::name)
-                    .collect(Collectors.toList()));
-        }
-
-        if (request.relationshipGoal() != null) {
-            profile.setRelationshipGoal(request.relationshipGoal().name());
-        }
-
+        mapper.updateBioFromRequest(request, profile);
         profileRepository.save(profile);
         return new SimpleResponse("Updated");
     }
@@ -97,6 +68,7 @@ public class ProfileService {
         return list.size() != list.stream().distinct().count();
     }
 
+    @Transactional
     public SimpleResponse dismissRecommendation(UUID userId, UUID targetId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));

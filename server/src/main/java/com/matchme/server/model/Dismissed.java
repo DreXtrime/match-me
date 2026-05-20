@@ -6,7 +6,10 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "dismissed")
+@Table(name = "dismissed", indexes = {
+        @Index(name = "idx_dismissed_user", columnList = "user_id"),
+        @Index(name = "idx_dismissed_pair", columnList = "user_id,dismissed_user_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor

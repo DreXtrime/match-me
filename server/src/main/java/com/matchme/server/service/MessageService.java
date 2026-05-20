@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -43,11 +44,10 @@ public class MessageService {
     }
 
     private boolean isConnected(UUID userId, UUID otherId) {
-        return connectionRepository.findByUserIdAndStatuses(userId, List.of("accepted"))
-                .stream()
-                .anyMatch(c -> c.getRequester().getId().equals(otherId) || c.getReceiver().getId().equals(otherId));
+        return connectionRepository.existsConnectionBetween(userId, otherId, List.of("accepted"));
     }
 
+    @Transactional
     public MessageResponse sendMessage(UUID senderId, UUID receiverId, SendMessageRequest request) {
         if (senderId.equals(receiverId)) {
             throw new BadRequestException("Cannot send a message to yourself");
@@ -84,6 +84,7 @@ public class MessageService {
         return response;
     }
 
+    @Transactional
     public Page<MessageResponse> getChatMessages(UUID userId, UUID otherId, int page, int size) {
         if (!isConnected(userId, otherId)) {
             throw new BadRequestException("You can only view messages with connected users");
@@ -92,43 +93,29 @@ public class MessageService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Message> messages = messageRepository.findChatMessages(userId, otherId, pageable);
 
-        boolean markedAny = false;
-        for (Message m : messages.getContent()) {
-            if (m.getReceiver().getId().equals(userId) && !m.isRead()) {
-                m.setRead(true);
-                m.setReadAt(LocalDateTime.now());
-                messageRepository.save(m);
-                markedAny = true;
-            }
-        }
-        if (markedAny) {
+        int marked = messageRepository.markMessagesAsRead(userId, otherId, LocalDateTime.now());
+        if (marked > 0) {
             webSocketEventHandler.forwardToUser(userId, "unread-update", Map.of("userId", userId.toString()));
         }
 
         return messages.map(mapper::toMessageResponse);
     }
 
+    @Transactional(readOnly = true)
     public ChatsResponse getChats(UUID userId) {
-        Set<UUID> partnerIds = new HashSet<>();
-        partnerIds.addAll(messageRepository.findSentToPartnerIds(userId));
-        partnerIds.addAll(messageRepository.findReceivedFromPartnerIds(userId));
-
-        List<ChatItemResponse> chats = partnerIds.stream()
-                .map(partnerId -> {
-                    Message lastMsg = messageRepository.findLastMessage(userId, partnerId);
-                    LocalDateTime lastTime = lastMsg != null ? lastMsg.getCreatedAt() : LocalDateTime.now();
-                    return new ChatItemResponse(partnerId, lastTime);
-                })
-                .sorted((a, b) -> b.lastMessageTime().compareTo(a.lastMessageTime()))
+        List<ChatItemResponse> chats = messageRepository.findChatPartners(userId)
+                .stream()
+                .map(row -> new ChatItemResponse((UUID) row[0], (LocalDateTime) row[1]))
                 .collect(Collectors.toList());
-
         return new ChatsResponse(chats);
     }
 
+    @Transactional(readOnly = true)
     public long getUnreadCount(UUID userId) {
         return messageRepository.countUnreadMessages(userId);
     }
 
+    @Transactional
     public SimpleResponse markAsRead(UUID userId, UUID messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new NotFoundException("Message not found"));

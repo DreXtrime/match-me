@@ -12,11 +12,11 @@ import com.matchme.server.repository.ConnectionRepository;
 import com.matchme.server.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,40 +26,27 @@ public class ConnectionService {
     private final UserRepository userRepository;
     private final WebSocketEventHandler webSocketEventHandler;
 
+    @Transactional(readOnly = true)
     public ConnectionsResponse getConnections(UUID userId) {
-        List<UUID> connections = connectionRepository
-                .findByUserIdAndStatuses(userId, List.of("accepted"))
-                .stream()
-                .map(c -> c.getRequester().getId().equals(userId)
-                        ? c.getReceiver().getId()
-                        : c.getRequester().getId())
-                .collect(Collectors.toList());
-
-        return new ConnectionsResponse(connections);
+        return new ConnectionsResponse(
+                connectionRepository.findPartnerIdsByStatuses(userId, List.of("accepted"))
+        );
     }
 
+    @Transactional(readOnly = true)
     public ConnectionRequestsResponse getConnectionRequests(UUID userId) {
-        List<UUID> requests = connectionRepository
-                .findByReceiverIdAndStatus(userId, "pending")
-                .stream()
-                .map(c -> c.getRequester().getId())
-                .collect(Collectors.toList());
-
-        return new ConnectionRequestsResponse(requests);
+        return new ConnectionRequestsResponse(
+                connectionRepository.findRequesterIdsByReceiverAndStatus(userId, "pending")
+        );
     }
 
+    @Transactional
     public SimpleResponse sendRequest(UUID requesterId, UUID targetId) {
         if (requesterId.equals(targetId)) {
             throw new BadRequestException("Cannot connect with yourself");
         }
 
-        boolean alreadyExists = connectionRepository
-                .findByUserIdAndStatuses(requesterId, List.of("accepted", "pending"))
-                .stream()
-                .anyMatch(c -> c.getRequester().getId().equals(targetId)
-                        || c.getReceiver().getId().equals(targetId));
-
-        if (alreadyExists) {
+        if (connectionRepository.existsConnectionBetween(requesterId, targetId, List.of("accepted", "pending"))) {
             throw new BadRequestException("Already requested or connected");
         }
 
@@ -81,6 +68,7 @@ public class ConnectionService {
         return new SimpleResponse("Request sent");
     }
 
+    @Transactional
     public SimpleResponse acceptRequest(UUID userId, UUID requesterId) {
         Connection connection = connectionRepository
                 .findByRequesterIdAndReceiverIdAndStatus(requesterId, userId, "pending")
@@ -93,6 +81,7 @@ public class ConnectionService {
         return new SimpleResponse("Connected");
     }
 
+    @Transactional
     public SimpleResponse declineRequest(UUID userId, UUID requesterId) {
         Connection connection = connectionRepository
                 .findByRequesterIdAndReceiverIdAndStatus(requesterId, userId, "pending")
@@ -104,13 +93,9 @@ public class ConnectionService {
         return new SimpleResponse("Declined");
     }
 
+    @Transactional
     public SimpleResponse disconnect(UUID userId, UUID targetId) {
-        Connection connection = connectionRepository
-                .findByUserIdAndStatuses(userId, List.of("accepted"))
-                .stream()
-                .filter(c -> c.getRequester().getId().equals(targetId)
-                        || c.getReceiver().getId().equals(targetId))
-                .findFirst()
+        Connection connection = connectionRepository.findAcceptedConnectionBetween(userId, targetId)
                 .orElseThrow(() -> new NotFoundException("Connection not found"));
 
         connection.setStatus("rejected");

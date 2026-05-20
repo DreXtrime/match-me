@@ -13,9 +13,10 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
 
     Optional<Profile> findByUserId(UUID userId);
 
-    // fetch all complete profiles excluding the requesting user
+    // Fetch all complete profiles excluding the requesting user; JOIN FETCH user to avoid N+1 on p.getUser()
     @Query("""
                 SELECT p FROM Profile p
+                JOIN FETCH p.user
                 WHERE p.user.id != :userId
                 AND p.age IS NOT NULL
                 AND p.relationshipGoal IS NOT NULL
