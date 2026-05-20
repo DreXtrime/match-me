@@ -1,80 +1,113 @@
 # Match-Me Setup Guide
 
-## Quick Start
+## Stack
 
-### 1. Backend Setup (Terminal 1)
+- **Backend:** Java 21 + Spring Boot, Maven, H2 (dev) / PostgreSQL (prod)
+- **Frontend:** React 18 + TypeScript + Vite
+- **Real-time:** Socket.IO (netty-socketio) on port 3001
+- **Auth:** JWT
+
+---
+
+## Quick Start (H2 in-memory — no database setup needed)
+
+### 1. Backend (Terminal 1)
+
 ```bash
 cd server
-npm install
-npm run seed  # Creates 150 test users
-npm run dev
+./mvnw spring-boot:run
 ```
 
-### 2. Frontend Setup (Terminal 2)
+On Windows:
+```bash
+cd server
+mvnw.cmd spring-boot:run
+```
+
+The server starts on **http://localhost:3000**.  
+H2 is used by default — no database installation required.
+
+### 2. Frontend (Terminal 2)
+
 ```bash
 cd client
 npm install
 npm run dev
 ```
 
-### 3. Database Setup
-```bash
-createdb matchme
-psql matchme < database/schema.sql
+The app opens on **http://localhost:5173**.
+
+---
+
+## Seeding Test Users
+
+Set `SEED_DATABASE=true` in `server/.env` (or as an env var) before starting the backend:
+
+```
+SEED_DATABASE=true
+SEED_USER_COUNT=100   # optional, defaults to 100
 ```
 
-## Testing the Application
+All seeded users have the password: `password`
 
-### Test Credentials
-Any user created during seed has password: `TestPassword123!`
+Example emails: `alice.smith0@example.com`, `bob.johnson1@example.com`
 
-Example emails:
-- `james.smith1@example.com`
-- `mary.johnson1@example.com`
-- `robert.williams1@example.com`
+---
 
-### Features to Try
+## Environment Variables (Backend)
 
-1. **Sign up and complete profile**
-   - Create account with email/password
-   - Fill in profile with interests
+Copy `.env.example` to `.env` in the `server/` folder. For local development with H2 the defaults work out of the box — no changes needed.
 
-2. **Browse recommendations**
-   - Visit /recommendations
-   - Like or pass on recommendations
-   - Dismissed users won't appear again
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `3000` | HTTP server port |
+| `JWT_SECRET` | (dev default) | Secret for signing JWTs — change in production |
+| `JWT_EXPIRATION` | `86400000` | Token lifetime in ms (24 h) |
+| `DDL_AUTO` | `create-drop` | Hibernate schema mode |
+| `SHOW_SQL` | `false` | Log SQL queries |
+| `SEED_DATABASE` | `false` | Populate DB with mock users on startup |
+| `SEED_USER_COUNT` | `100` | Number of users to seed |
+| `SOCKETIO_PORT` | `3001` | Port for the Socket.IO server |
 
-3. **Connect with people**
-   - Send connection requests from recommendations
-   - View pending requests in /connections
-   - Accept/reject requests
+### PostgreSQL (production)
 
-4. **Chat with connections**
-   - Once connected, start a chat
-   - Real-time messaging with typing indicators
-   - See online/offline status
+Fill in the PostgreSQL block in `server/.env` (already uncommented in `.env.example`):
 
-## Important Files
+```
+DATABASE_URL=jdbc:postgresql://localhost:5432/matchme
+DB_USERNAME=postgres
+DB_PASSWORD=yourpassword
+DB_DRIVER=org.postgresql.Driver
+DDL_AUTO=update
+```
 
-- `server/src/services/matching.ts` - Matching algorithm implementation
-- `server/database/schema.sql` - Database schema
-- `server/database/seed.ts` - Test data generator
-- `client/src/pages/RecommendationsPage.tsx` - Recommendation UI
+---
 
-## Customization
+## Environment Variables (Frontend)
 
-### Change matching algorithm weights
-Edit `server/src/services/matching.ts` - adjust scores in `calculateBioDataMatches` and `getRecommendations`
+Create `client/.env` if you need to override the defaults:
 
-### Add more interests
-Edit `database/seed.ts` - modify the `INTERESTS` array
+```
+VITE_API_URL=http://localhost:3000
+VITE_SOCKETIO_URL=http://localhost:3001
+```
 
-### Change locations
-Edit `database/seed.ts` - modify the `LOCATIONS` array
+---
 
-## API Testing
+## Key Source Files
 
-Use `curl` or Postman to test endpoints:
+| File | Purpose |
+|---|---|
+| `server/src/main/java/.../service/RecommendationService.java` | Matching algorithm |
+| `server/src/main/java/.../service/ConnectionService.java` | Connection requests / accept / reject |
+| `server/src/main/java/.../config/WebSocketEventHandler.java` | Real-time events (online status, typing) |
+| `server/src/main/resources/application.properties` | Spring configuration |
+| `client/src/pages/RecommendationsPage.tsx` | Swipe / discover UI |
+| `client/src/context/WebSocketContext.tsx` | Shared Socket.IO client |
+
+---
+
+## API Quick Reference
 
 ```bash
 # Register
@@ -87,36 +120,19 @@ curl -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"Password123!"}'
 
-# Get recommendations (with token)
-curl -X GET http://localhost:3000/recommendations \
-  -H "Authorization: Bearer YOUR_TOKEN"
+# Get recommendations (replace TOKEN)
+curl http://localhost:3000/recommendations \
+  -H "Authorization: Bearer TOKEN"
 ```
+
+---
 
 ## Troubleshooting
 
-### Port 3000 in use
-Edit `.env` PORT variable
+**Port 3000 in use** — set `PORT=3001` in `server/.env` (and update `VITE_API_URL` in `client/.env`).
 
-### Port 5173 in use
-Vite will prompt for alternative
+**Port 5173 in use** — Vite will automatically suggest an alternative port.
 
-### Database already exists
-Drop and recreate:
-```bash
-dropdb matchme
-createdb matchme
-psql matchme < database/schema.sql
-npm run seed
-```
+**WebSocket not connecting** — make sure the backend is running and `VITE_SOCKETIO_URL` in `client/.env` points to port 3001.
 
-### WebSocket not connecting
-- Verify backend is running
-- Check browser console for errors
-- Ensure token is in localStorage
-
-## Performance Notes
-
-- Recommendations calculated in real-time
-- For 1000+ users, consider adding caching or async job queue
-- Distance calculations using Haversine formula
-- Indexed queries on frequently filtered fields
+**PostgreSQL driver error** — ensure `DATABASE_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_DRIVER` are all set together. Missing any one of them will cause the driver mismatch on startup.

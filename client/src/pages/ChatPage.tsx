@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { messageService, profileService } from '../services/api.js';
 import { useWebSocket } from '../hooks/useWebSocket.js';
-import type { Message, Profile } from '../types/index.js';
+import type { Message, User } from '../types/index.js';
 
 interface NewMessagePayload {
+  id: string;
   senderId: string;
   receiverId: string;
-  messageId: string;
   content: string;
+  isRead: boolean;
   createdAt: string;
 }
 
@@ -18,14 +19,15 @@ interface TypingPayload {
 
 export const ChatPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [otherUserProfile, setOtherUserProfile] = useState<Profile | null>(null);
+  const [otherUser, setOtherUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { socket, isConnected, emit, on, off } = useWebSocket();
+  const { socket, emit, on, off } = useWebSocket();
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const localUserId = localStorage.getItem('userId') ?? '';
 
@@ -46,38 +48,50 @@ export const ChatPage: React.FC = () => {
   useEffect(() => {
     if (!userId || !socket) return;
 
-    on('new-message', (data: NewMessagePayload) => {
+    const handleNewMessage = (data: NewMessagePayload) => {
       if (data.senderId === userId) {
         setMessages((prev: Message[]) => [
           ...prev,
           {
-            id: data.messageId,
+            id: data.id,
             sender_id: data.senderId,
             receiver_id: data.receiverId,
             content: data.content,
-            is_read: false,
+            is_read: data.isRead,
             created_at: data.createdAt,
           },
         ]);
       }
-    });
+    };
 
-    on('user-typing', (data: TypingPayload) => {
-      if (data.userId === userId) {
-        setIsTyping(true);
-      }
-    });
+    const handleUserTyping = (data: TypingPayload) => {
+      if (data.userId === userId) setIsTyping(true);
+    };
 
-    on('user-stopped-typing', (data: TypingPayload) => {
-      if (data.userId === userId) {
-        setIsTyping(false);
-      }
-    });
+    const handleUserStoppedTyping = (data: TypingPayload) => {
+      if (data.userId === userId) setIsTyping(false);
+    };
+
+    const handleUserOnline = (onlineUserId: string) => {
+      if (onlineUserId === userId) setOtherUser(prev => prev ? { ...prev, isOnline: true } : prev);
+    };
+
+    const handleUserOffline = (offlineUserId: string) => {
+      if (offlineUserId === userId) setOtherUser(prev => prev ? { ...prev, isOnline: false } : prev);
+    };
+
+    on('new-message', handleNewMessage);
+    on('user-typing', handleUserTyping);
+    on('user-stopped-typing', handleUserStoppedTyping);
+    on('user-online', handleUserOnline);
+    on('user-offline', handleUserOffline);
 
     return () => {
-      off('new-message');
-      off('user-typing');
-      off('user-stopped-typing');
+      off('new-message', handleNewMessage);
+      off('user-typing', handleUserTyping);
+      off('user-stopped-typing', handleUserStoppedTyping);
+      off('user-online', handleUserOnline);
+      off('user-offline', handleUserOffline);
     };
   }, [socket, userId, on, off]);
 
@@ -97,8 +111,8 @@ export const ChatPage: React.FC = () => {
   const loadOtherUserProfile = async () => {
     try {
       if (!userId) return;
-      const profile = await profileService.getUser(userId);
-      setOtherUserProfile(profile);
+      const user = await profileService.getUser(userId);
+      setOtherUser(user);
     } catch (err) {
       console.error('Failed to load user profile:', err);
     }
@@ -113,16 +127,8 @@ export const ChatPage: React.FC = () => {
       setMessages((prev: Message[]) => [...prev, message]);
       setNewMessage('');
 
-      // Emit message through WebSocket
-      emit('message', {
-        receiverId: userId,
-        content: newMessage,
-        messageId: message.id,
-        createdAt: message.created_at,
-      });
-
       // Stop typing indicator
-      emit('stop-typing', { receiverId: userId });
+      emit('user-stopped-typing', { receiverId: userId });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send message');
     }
@@ -131,41 +137,69 @@ export const ChatPage: React.FC = () => {
   const handleTyping = () => {
     if (!userId) return;
 
-    emit('typing', { receiverId: userId });
+    emit('user-typing', { receiverId: userId });
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      emit('stop-typing', { receiverId: userId });
+      emit('user-stopped-typing', { receiverId: userId });
     }, 2000);
   };
 
-  if (loading) return <div style={containerStyle}>Loading chat...</div>;
+  if (loading) return (
+    <div style={containerStyle}>
+      <div style={loadingStyle}>Loading chat...</div>
+    </div>
+  );
+
+  if (!userId) return (
+    <div style={containerStyle}>
+      <div style={errorBoxStyle}>Chat not found</div>
+    </div>
+  );
 
   return (
     <div style={containerStyle}>
       <div style={chatBoxStyle}>
         <div style={headerStyle}>
-          <div>
-            <h2>{otherUserProfile?.first_name || 'Chat'}</h2>
-            <p style={{ margin: 0, fontSize: '0.9rem', color: '#555' }}>
-              {otherUserProfile?.is_online ? 'Online now' : 'Offline'}
-            </p>
+          <button onClick={() => navigate('/chats')} style={backButtonStyle}>← Back</button>
+          <div style={headerContentStyle}>
+            <div>
+              <h2 style={headerTitleStyle}>{otherUser?.name || 'Chat'}</h2>
+              <p style={onlineStatusStyle}>
+                <span style={onlineDotStyle(otherUser?.isOnline || false)} />
+                {otherUser?.isOnline ? 'Online now' : 'Offline'}
+              </p>
+            </div>
           </div>
         </div>
 
         {error && <div style={errorStyle}>{error}</div>}
 
         <div style={messagesContainerStyle}>
-          {messages.map((msg) => (
-            <div key={msg.id} style={messageStyle(msg.sender_id === localUserId)}>
-              <p>{msg.content}</p>
-              <small>{new Date(msg.created_at).toLocaleTimeString()}</small>
+          {messages.length === 0 ? (
+            <div style={emptyStateStyle}>
+              <p>No messages yet. Start the conversation! 💬</p>
             </div>
-          ))}
-          {isTyping && <div style={typingIndicatorStyle}>💬 {otherUserProfile?.first_name} is typing...</div>}
+          ) : (
+            messages.map((msg) => (
+              <div key={msg.id} style={messageWrapperStyle(msg.sender_id === localUserId)}>
+                <div style={messageStyle(msg.sender_id === localUserId)}>
+                  <p style={messageContentStyle}>{msg.content}</p>
+                  <small style={messageTimeStyle}>
+                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </small>
+                </div>
+              </div>
+            ))
+          )}
+          {isTyping && <div style={typingIndicatorStyle}>
+            <span style={typingDotStyle} />
+            <span style={typingDotStyle} />
+            <span style={typingDotStyle} />
+          </div>}
           <div ref={messagesEndRef} />
         </div>
 
@@ -181,7 +215,7 @@ export const ChatPage: React.FC = () => {
             style={inputStyle}
           />
           <button type="submit" style={sendButtonStyle}>
-            Send
+            ✈️
           </button>
         </form>
       </div>
@@ -198,78 +232,183 @@ const containerStyle: React.CSSProperties = {
   padding: '1rem',
 };
 
+const loadingStyle: React.CSSProperties = {
+  color: 'var(--muted)',
+  fontSize: '1.1rem',
+};
+
 const chatBoxStyle: React.CSSProperties = {
   backgroundColor: 'var(--surface)',
-  borderRadius: '16px',
-  boxShadow: 'var(--shadow)',
+  borderRadius: '24px',
+  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
   width: '100%',
-  maxWidth: '600px',
+  maxWidth: '700px',
   height: '80vh',
   display: 'flex',
   flexDirection: 'column',
+  border: '1px solid var(--border)',
+};
+
+const backButtonStyle: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--primary)',
+  fontSize: '1rem',
+  cursor: 'pointer',
+  padding: '0',
+  marginRight: '1rem',
+  transition: 'color 0.2s ease',
 };
 
 const headerStyle: React.CSSProperties = {
   borderBottom: '1px solid var(--border)',
-  padding: '1rem',
-  backgroundColor: 'var(--surface-light)',
+  padding: '1.5rem',
+  backgroundColor: 'linear-gradient(135deg, rgba(124, 152, 255, 0.1), rgba(164, 89, 255, 0.05))',
+  display: 'flex',
+  alignItems: 'center',
 };
+
+const headerContentStyle: React.CSSProperties = {
+  flex: 1,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+};
+
+const headerTitleStyle: React.CSSProperties = {
+  margin: '0 0 0.25rem 0',
+  fontSize: '1.3rem',
+  fontWeight: 700,
+  color: 'var(--text)',
+};
+
+const onlineStatusStyle: React.CSSProperties = {
+  margin: 0,
+  fontSize: '0.85rem',
+  color: 'var(--muted)',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem',
+};
+
+const onlineDotStyle = (isOnline: boolean): React.CSSProperties => ({
+  display: 'inline-block',
+  width: '8px',
+  height: '8px',
+  borderRadius: '50%',
+  backgroundColor: isOnline ? '#44d190' : '#9bb2d6',
+});
 
 const messagesContainerStyle: React.CSSProperties = {
   flex: 1,
   overflowY: 'auto',
-  padding: '1rem',
+  padding: '1.5rem',
   display: 'flex',
   flexDirection: 'column',
-  gap: '1rem',
+  gap: '0.75rem',
 };
 
-const messageStyle = (isOwn: boolean): React.CSSProperties => ({
-  alignSelf: isOwn ? 'flex-end' : 'flex-start',
-  backgroundColor: isOwn ? 'var(--primary)' : 'var(--surface-light)',
-  color: 'white',
-  padding: '0.75rem 1rem',
-  borderRadius: '16px',
-  maxWidth: '70%',
-  wordWrap: 'break-word',
+const emptyStateStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  height: '100%',
+  color: 'var(--muted)',
+  textAlign: 'center',
+};
+
+const messageWrapperStyle = (isOwn: boolean): React.CSSProperties => ({
+  display: 'flex',
+  justifyContent: isOwn ? 'flex-end' : 'flex-start',
 });
 
+const messageStyle = (isOwn: boolean): React.CSSProperties => ({
+  background: isOwn 
+    ? 'linear-gradient(135deg, #7c98ff, #6483ff)' 
+    : 'var(--surface-light)',
+  color: isOwn ? 'white' : 'var(--text)',
+  padding: '0.875rem 1.125rem',
+  borderRadius: isOwn ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
+  maxWidth: '70%',
+  wordWrap: 'break-word',
+  boxShadow: isOwn ? '0 2px 8px rgba(124, 152, 255, 0.2)' : 'none',
+});
+
+const messageContentStyle: React.CSSProperties = {
+  margin: 0,
+  fontSize: '0.95rem',
+  lineHeight: '1.4',
+};
+
+const messageTimeStyle: React.CSSProperties = {
+  opacity: 0.7,
+  fontSize: '0.75rem',
+  display: 'block',
+  marginTop: '0.25rem',
+};
+
 const typingIndicatorStyle: React.CSSProperties = {
-  color: 'var(--muted)',
-  fontStyle: 'italic',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.25rem',
   padding: '0.5rem',
+  color: 'var(--muted)',
+};
+
+const typingDotStyle: React.CSSProperties = {
+  display: 'inline-block',
+  width: '8px',
+  height: '8px',
+  borderRadius: '50%',
+  backgroundColor: 'var(--primary)',
+  animation: 'typing 1.4s infinite',
 };
 
 const formStyle: React.CSSProperties = {
   display: 'flex',
-  gap: '0.5rem',
-  padding: '1rem',
+  gap: '0.75rem',
+  padding: '1.25rem',
   borderTop: '1px solid var(--border)',
+  backgroundColor: 'var(--surface-light)',
+  borderBottomLeftRadius: '24px',
+  borderBottomRightRadius: '24px',
 };
 
 const inputStyle: React.CSSProperties = {
   flex: 1,
-  padding: '0.75rem',
+  padding: '0.875rem 1.125rem',
   border: '1px solid var(--border)',
-  borderRadius: '12px',
-  fontSize: '1rem',
-  backgroundColor: 'var(--surface-light)',
+  borderRadius: '20px',
+  fontSize: '0.95rem',
+  backgroundColor: 'var(--surface)',
   color: 'var(--text)',
+  transition: 'border-color 0.2s ease, background-color 0.2s ease',
 };
 
 const sendButtonStyle: React.CSSProperties = {
-  padding: '0.75rem 1.5rem',
+  padding: '0.875rem 1.5rem',
   backgroundColor: 'var(--primary)',
   color: 'white',
   border: 'none',
-  borderRadius: '12px',
+  borderRadius: '20px',
   cursor: 'pointer',
+  fontSize: '1.1rem',
+  transition: 'transform 0.2s ease, opacity 0.2s ease',
+};
+
+const errorBoxStyle: React.CSSProperties = {
+  backgroundColor: 'rgba(247, 105, 105, 0.1)',
+  border: '1px solid rgba(247, 105, 105, 0.3)',
+  color: '#f8d7da',
+  padding: '1rem',
+  borderRadius: '12px',
 };
 
 const errorStyle: React.CSSProperties = {
-  backgroundColor: '#451616',
+  backgroundColor: 'rgba(247, 105, 105, 0.1)',
   color: '#f8d7da',
   padding: '1rem',
   margin: '1rem',
   borderRadius: '8px',
+  border: '1px solid rgba(247, 105, 105, 0.3)',
 };

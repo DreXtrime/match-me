@@ -64,5 +64,8 @@ public class Profile {
     private String relationshipGoal;
 
     @Column
+    private String profilePictureUrl;
+
+    @Column
     private LocalDateTime createdAt = LocalDateTime.now();
 }

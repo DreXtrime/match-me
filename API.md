@@ -41,7 +41,7 @@ The following enums are used across bio endpoints:
   ```
 - **Response**:
   ```json
-  { "token": "string" }
+  { "userId": "uuid", "token": "string" }
   ```
 - **Error Response**:
   ```json
@@ -61,7 +61,7 @@ The following enums are used across bio endpoints:
   ```
 - **Response**:
   ```json
-  { "token": "string" }
+  { "userId": "uuid", "token": "string" }
   ```
 - **Error Response**:
   ```json
@@ -75,14 +75,15 @@ The following enums are used across bio endpoints:
 
 #### Get Current User
 - **Endpoint**: `GET /me`
-- **Description**: Shortcut to `/users/:id` for the authenticated user. Returns name and profile picture.
+- **Description**: Shortcut to `/users/:id` for the authenticated user. Returns name, profile picture, and online status.
 - **Auth Required**: Yes
 - **Response**:
   ```json
   {
     "id": "uuid",
     "name": "string",
-    "profilePicture": "string"
+    "profilePicture": "string",
+    "isOnline": true
   }
   ```
 
@@ -137,6 +138,7 @@ The following enums are used across bio endpoints:
     "firstName": "string",
     "lastName": "string",
     "aboutMe": "string",
+    "profilePictureUrl": "string | null",
     "maxDistanceKm": 50,
     "latitude": null,
     "longitude": null
@@ -176,14 +178,15 @@ The following enums are used across bio endpoints:
 
 #### Get User by ID
 - **Endpoint**: `GET /users/:id`
-- **Description**: Get a user's name and profile picture. Only accessible if the user is recommended, pending, or connected.
+- **Description**: Get a user's name, profile picture, and online status. Only accessible if the user is recommended, pending, or connected.
 - **Auth Required**: Yes
 - **Response**:
   ```json
   {
     "id": "uuid",
     "name": "string",
-    "profilePicture": "string"
+    "profilePicture": "string",
+    "isOnline": true
   }
   ```
 - **Error Response**:
@@ -342,6 +345,120 @@ The following enums are used across bio endpoints:
   { "message": "Disconnected" }
   ```
 - **Status Codes**: 200 OK
+
+---
+
+### Messages
+
+#### Send Message
+- **Endpoint**: `POST /messages?receiverId=:id`
+- **Description**: Send a message to a connected user. Returns 400 if sender and receiver are not connected.
+- **Auth Required**: Yes
+- **Request Body**:
+  ```json
+  { "content": "string" }
+  ```
+- **Response**:
+  ```json
+  {
+    "id": "uuid",
+    "senderId": "uuid",
+    "receiverId": "uuid",
+    "content": "string",
+    "isRead": false,
+    "createdAt": "ISO 8601"
+  }
+  ```
+- **Status Codes**: 201 Created, 400 Bad Request
+
+---
+
+#### Get Chat History
+- **Endpoint**: `GET /chats/:id/messages?page=0&size=50`
+- **Description**: Get paginated message history between the authenticated user and another user. Messages are returned newest-first. Automatically marks received messages as read.
+- **Auth Required**: Yes
+- **Response**: Spring `Page<MessageResponse>`
+  ```json
+  {
+    "content": [
+      {
+        "id": "uuid",
+        "senderId": "uuid",
+        "receiverId": "uuid",
+        "content": "string",
+        "isRead": true,
+        "createdAt": "ISO 8601"
+      }
+    ],
+    "totalElements": 42,
+    "totalPages": 1
+  }
+  ```
+- **Status Codes**: 200 OK, 400 Bad Request
+
+---
+
+#### Get Chats List
+- **Endpoint**: `GET /chats`
+- **Description**: Get all conversations the authenticated user has participated in, sorted by most recent message.
+- **Auth Required**: Yes
+- **Response**:
+  ```json
+  {
+    "chats": [
+      { "id": "uuid", "lastMessageTime": "ISO 8601" }
+    ]
+  }
+  ```
+- **Status Codes**: 200 OK
+
+---
+
+#### Get Unread Message Count
+- **Endpoint**: `GET /messages/unread/count`
+- **Description**: Get the total number of unread messages received by the authenticated user.
+- **Auth Required**: Yes
+- **Response**:
+  ```json
+  { "unreadCount": 3 }
+  ```
+- **Status Codes**: 200 OK
+
+---
+
+#### Mark Message as Read
+- **Endpoint**: `PUT /messages/:id/read`
+- **Description**: Mark a specific received message as read.
+- **Auth Required**: Yes
+- **Response**:
+  ```json
+  { "message": "Message marked as read" }
+  ```
+- **Status Codes**: 200 OK, 400 Bad Request (if not the receiver), 404 Not Found
+
+---
+
+### Real-time (Socket.IO)
+
+The server runs a Socket.IO server on port **3001**. Connect with:
+```json
+{ "query": { "token": "<jwt>", "userId": "<uuid>" } }
+```
+
+| Event (client → server) | Payload | Description |
+|---|---|---|
+| `user-typing` | `{ "receiverId": "uuid" }` | Notify the other user you are typing |
+| `user-stopped-typing` | `{ "receiverId": "uuid" }` | Notify typing has stopped |
+
+| Event (server → client) | Payload | Description |
+|---|---|---|
+| `new-message` | Full message object | Delivered only to the recipient when a message is sent |
+| `unread-update` | `{ "userId": "uuid" }` | Tells the client to refresh its unread count |
+| `user-typing` | `{ "userId": "uuid" }` | Forwarded to the recipient |
+| `user-stopped-typing` | `{ "userId": "uuid" }` | Forwarded to the recipient |
+| `user-online` | `"uuid"` | Broadcast to all clients when a user connects |
+| `user-offline` | `"uuid"` | Broadcast to all clients after a 5-minute grace period following disconnect |
+| `connection-request` | `{ "fromUserId": "uuid" }` | Delivered to the recipient when someone sends them a connection request |
 
 ---
 

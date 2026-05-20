@@ -1,7 +1,7 @@
 import axios from 'axios';
-import type { AuthResponse, User, Profile, Message, Connection } from '../types/index.js';
+import type { AuthResponse, User, Profile, Message, BioData } from '../types/index.js';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -10,7 +10,6 @@ const apiClient = axios.create({
   },
 });
 
-// Add authorization header
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -18,6 +17,64 @@ apiClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const backendMessage = error.response?.data?.message;
+
+    const friendlyMessages: Record<number, string> = {
+      400: backendMessage || 'Invalid request.',
+      401: 'You are not logged in. Please log in and try again.',
+      403: 'You do not have permission to do that.',
+      404: backendMessage || 'The requested resource was not found.',
+      500: 'Something went wrong on the server. Please try again later.',
+    };
+
+    const message = friendlyMessages[status] ?? backendMessage ?? 'An unexpected error occurred.';
+    return Promise.reject(new Error(message));
+  }
+);
+
+// Normalize backend camelCase profile response to the shape pages expect
+function normalizeProfile(data: any): Profile {
+  return {
+    id: data.id,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    aboutMe: data.aboutMe,
+    profilePicture: data.profilePicture,
+    maxDistanceKm: data.maxDistanceKm,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    // snake_case aliases consumed by existing pages
+    first_name: data.firstName,
+    last_name: data.lastName,
+    bio: data.aboutMe,
+    profile_picture_url: data.profilePicture,
+  };
+}
+
+function normalizeUser(data: any): User {
+  return {
+    id: data.id,
+    name: data.name,
+    profilePicture: data.profilePicture,
+    isOnline: data.isOnline ?? false,
+  };
+}
+
+function normalizeMessage(msg: any): Message {
+  return {
+    id: msg.id,
+    sender_id: msg.senderId,
+    receiver_id: msg.receiverId,
+    content: msg.content,
+    is_read: msg.isRead,
+    created_at: msg.createdAt,
+  };
+}
 
 export const authService = {
   register: async (email: string, password: string): Promise<AuthResponse> => {
@@ -29,77 +86,78 @@ export const authService = {
     const response = await apiClient.post('/auth/login', { email, password });
     return response.data;
   },
-
-  logout: async (): Promise<void> => {
-    await apiClient.post('/auth/logout', {});
-  },
 };
 
 export const profileService = {
   completeProfile: async (data: {
-    username?: string;
     first_name?: string;
     last_name?: string;
     bio?: string;
     profile_picture_url?: string;
-    location?: string;
+    maxDistanceKm?: number;
     latitude?: number;
     longitude?: number;
-  }): Promise<Profile> => {
-    const response = await apiClient.post('/profile', data);
+  }): Promise<any> => {
+    const payload = {
+      firstName: data.first_name || '',
+      lastName: data.last_name || '',
+      aboutMe: data.bio,
+      profilePictureUrl: data.profile_picture_url || null,
+      maxDistanceKm: data.maxDistanceKm ?? null,
+      latitude: data.latitude != null ? data.latitude : null,
+      longitude: data.longitude != null ? data.longitude : null,
+    };
+    const response = await apiClient.put('/me/profile', payload);
+    return response.data;
+  },
+
+  updateBio: async (bioData: {
+    age: number;
+    interests: string[];
+    fridayNightActivities: string[];
+    musicGenres: string[];
+    relationshipGoal: string;
+  }): Promise<any> => {
+    const response = await apiClient.put('/me/bio', bioData);
     return response.data;
   },
 
   getProfile: async (userId: string): Promise<Profile> => {
     const response = await apiClient.get(`/users/${userId}/profile`);
-    return response.data;
+    return normalizeProfile(response.data);
   },
 
   getOwnProfile: async (): Promise<Profile> => {
     const response = await apiClient.get('/me/profile');
-    return response.data;
+    return normalizeProfile(response.data);
   },
 
   getUser: async (userId: string): Promise<User> => {
     const response = await apiClient.get(`/users/${userId}`);
-    return response.data;
+    return normalizeUser(response.data);
   },
 
   getMe: async (): Promise<User> => {
     const response = await apiClient.get('/me');
-    return response.data;
+    return normalizeUser(response.data);
   },
 
-  getMyBio: async (): Promise<{ id: string; bioData: any[] }> => {
+  getMyBio: async (): Promise<BioData> => {
     const response = await apiClient.get('/me/bio');
-    return response.data;
+    return response.data as BioData;
   },
 
-  getUserBio: async (userId: string): Promise<{ id: string; bioData: any[] }> => {
+  getUserBio: async (userId: string): Promise<BioData> => {
     const response = await apiClient.get(`/users/${userId}/bio`);
-    return response.data;
-  },
-
-  addBioData: async (bioDataItems: Array<{ key: string; value: string; weight?: number }>): Promise<any> => {
-    const response = await apiClient.post('/bio-data', { bioDataItems });
-    return response.data;
-  },
-
-  setPreferences: async (preferences: { looking_for_key?: string; looking_for_value?: string; max_distance_km?: number }): Promise<any> => {
-    const response = await apiClient.post('/preferences', preferences);
-    return response.data;
-  },
-
-  getPreferences: async (): Promise<any> => {
-    const response = await apiClient.get('/preferences');
-    return response.data;
+    return response.data as BioData;
   },
 };
 
 export const recommendationService = {
-  getRecommendations: async (): Promise<{ id: string }[]> => {
+  // Backend returns { recommendations: ["uuid", ...] }
+  getRecommendations: async (): Promise<string[]> => {
     const response = await apiClient.get('/recommendations');
-    return response.data;
+    return response.data.recommendations ?? [];
   },
 
   dismissRecommendation: async (userId: string): Promise<void> => {
@@ -108,55 +166,62 @@ export const recommendationService = {
 };
 
 export const connectionService = {
-  getConnections: async (): Promise<{ id: string }[]> => {
+  // Backend returns { connections: ["uuid", ...] }
+  getConnections: async (): Promise<string[]> => {
     const response = await apiClient.get('/connections');
-    return response.data;
+    return response.data.connections ?? [];
   },
 
-  requestConnection: async (userId: string): Promise<Connection> => {
-    const response = await apiClient.post(`/connections/${userId}`, {});
-    return response.data;
+  // Backend returns { requests: ["uuid", ...] }
+  getPendingRequests: async (): Promise<string[]> => {
+    const response = await apiClient.get('/connections/requests');
+    return response.data.requests ?? [];
   },
 
-  getPendingRequests: async (): Promise<Connection[]> => {
-    const response = await apiClient.get('/connections/requests/pending');
-    return response.data;
+  requestConnection: async (userId: string): Promise<void> => {
+    await apiClient.post(`/connections/${userId}/request`, {});
   },
 
-  acceptConnection: async (connectionId: string): Promise<Connection> => {
-    const response = await apiClient.post(`/connections/${connectionId}/accept`, {});
-    return response.data;
+  acceptConnection: async (userId: string): Promise<void> => {
+    await apiClient.post(`/connections/${userId}/accept`, {});
   },
 
-  rejectConnection: async (connectionId: string): Promise<Connection> => {
-    const response = await apiClient.post(`/connections/${connectionId}/reject`, {});
-    return response.data;
+  rejectConnection: async (userId: string): Promise<void> => {
+    await apiClient.post(`/connections/${userId}/decline`, {});
   },
 
-  deleteConnection: async (connectionId: string): Promise<void> => {
-    await apiClient.delete(`/connections/${connectionId}`);
+  deleteConnection: async (userId: string): Promise<void> => {
+    await apiClient.delete(`/connections/${userId}`);
   },
 };
 
 export const messageService = {
   sendMessage: async (receiverId: string, content: string): Promise<Message> => {
-    const response = await apiClient.post('/messages', { receiverId, content });
-    return response.data;
+    const response = await apiClient.post(`/messages?receiverId=${receiverId}`, { content });
+    return normalizeMessage(response.data);
   },
 
-  getConversation: async (userId: string, limit: number = 50, offset: number = 0): Promise<Message[]> => {
-    const response = await apiClient.get(`/messages/${userId}`, { params: { limit, offset } });
-    return response.data;
+  getConversation: async (userId: string, page: number = 0, size: number = 50): Promise<Message[]> => {
+    const response = await apiClient.get(`/chats/${userId}/messages`, { params: { page, size } });
+    // Backend returns Spring Page: { content: [...], totalPages, ... }
+    const content = response.data.content ?? [];
+    // Messages are returned newest-first; reverse for display
+    return content.map(normalizeMessage).reverse();
   },
 
-  getChats: async (limit: number = 50): Promise<any[]> => {
-    const response = await apiClient.get('/chats', { params: { limit } });
-    return response.data;
+  getChats: async (): Promise<{ id: string; lastMessageTime: string }[]> => {
+    const response = await apiClient.get('/chats');
+    const chats = response.data.chats ?? [];
+    return chats.map((c: any) => ({ id: c.id, lastMessageTime: c.lastMessageTime }));
   },
 
   getUnreadCount: async (): Promise<number> => {
-    const response = await apiClient.get('/unread-count');
-    return response.data.unreadCount;
+    const response = await apiClient.get('/messages/unread/count');
+    return response.data.unreadCount ?? 0;
+  },
+
+  markAsRead: async (messageId: string): Promise<void> => {
+    await apiClient.put(`/messages/${messageId}/read`, {});
   },
 };
 

@@ -1,33 +1,57 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { connectionService, profileService } from '../services/api.js';
-import type { Connection, User } from '../types/index.js';
+import { useWebSocket } from '../hooks/useWebSocket.js';
+import type { User } from '../types/index.js';
+
+type UserEntry = { id: string; user?: User };
 
 export const ConnectionsPage: React.FC = () => {
-  const [connections, setConnections] = useState<{ id: string; user?: User }[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<Connection[]>([]);
+  const [connections, setConnections] = useState<UserEntry[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<UserEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const { on, off } = useWebSocket();
 
   useEffect(() => {
-    loadConnections();
-    loadPendingRequests();
+    Promise.all([loadConnections(), loadPendingRequests()]).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    const updateOnline = (userId: string, online: boolean) => {
+      setConnections(prev => prev.map(c =>
+        c.user?.id === userId ? { ...c, user: { ...c.user!, isOnline: online } } : c
+      ));
+      setPendingRequests(prev => prev.map(r =>
+        r.user?.id === userId ? { ...r, user: { ...r.user!, isOnline: online } } : r
+      ));
+    };
+    const handleOnline = (id: string) => updateOnline(id, true);
+    const handleOffline = (id: string) => updateOnline(id, false);
+
+    on('user-online', handleOnline);
+    on('user-offline', handleOffline);
+    return () => {
+      off('user-online', handleOnline);
+      off('user-offline', handleOffline);
+    };
+  }, [on, off]);
 
   const loadConnections = async () => {
     try {
-      const conns = await connectionService.getConnections();
-      // Load user info for each connection
-      const connectionsWithInfo = await Promise.all(
-        conns.map(async (conn) => {
+      const ids = await connectionService.getConnections();
+      const withInfo = await Promise.all(
+        ids.map(async (id) => {
           try {
-            const user = await profileService.getUser(conn.id);
-            return { id: conn.id, user };
+            const user = await profileService.getUser(id);
+            return { id, user };
           } catch {
-            return { id: conn.id };
+            return { id };
           }
         })
       );
-      setConnections(connectionsWithInfo);
+      setConnections(withInfo);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load connections');
     }
@@ -35,12 +59,20 @@ export const ConnectionsPage: React.FC = () => {
 
   const loadPendingRequests = async () => {
     try {
-      const requests = await connectionService.getPendingRequests();
-      setPendingRequests(requests);
+      const ids = await connectionService.getPendingRequests();
+      const withInfo = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const user = await profileService.getUser(id);
+            return { id, user };
+          } catch {
+            return { id };
+          }
+        })
+      );
+      setPendingRequests(withInfo);
     } catch (err) {
       console.error('Failed to load pending requests:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -85,10 +117,8 @@ export const ConnectionsPage: React.FC = () => {
             {pendingRequests.map((req) => (
               <div key={req.id} style={requestCardStyle}>
                 <div>
-                  <h3>Connection Request</h3>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--muted)' }}>
-                    Received {new Date(req.created_at).toLocaleDateString()}
-                  </p>
+                  <h3>{req.user?.name || 'User'}</h3>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--muted)' }}>Wants to connect with you</p>
                 </div>
                 <div style={requestActionsStyle}>
                   <button onClick={() => handleAccept(req.id)} style={acceptButtonStyle}>
@@ -110,13 +140,18 @@ export const ConnectionsPage: React.FC = () => {
           ) : (
             connections.map((conn) => (
               <div key={conn.id} style={connectionCardStyle}>
-                <div style={{ flex: 1 }}>
-                  <h3>{conn.user?.username || 'User'}</h3>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--muted)' }}>{conn.user?.first_name}</p>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <h3 style={{ margin: 0 }}>{conn.user?.name || 'User'}</h3>
+                  <span style={onlineDotStyle(conn.user?.isOnline || false)} title={conn.user?.isOnline ? 'Online' : 'Offline'} />
                 </div>
-                <button onClick={() => handleDisconnect(conn.id)} style={disconnectButtonStyle}>
-                  Disconnect
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => navigate(`/chat/${conn.id}`)} style={chatButtonStyle}>
+                    Chat
+                  </button>
+                  <button onClick={() => handleDisconnect(conn.id)} style={disconnectButtonStyle}>
+                    Disconnect
+                  </button>
+                </div>
               </div>
             ))
           )}
@@ -186,6 +221,15 @@ const rejectButtonStyle: React.CSSProperties = {
   cursor: 'pointer',
 };
 
+const chatButtonStyle: React.CSSProperties = {
+  padding: '0.5rem 1rem',
+  backgroundColor: 'var(--primary)',
+  color: 'white',
+  border: 'none',
+  borderRadius: '4px',
+  cursor: 'pointer',
+};
+
 const disconnectButtonStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
   backgroundColor: '#6c757d',
@@ -194,6 +238,15 @@ const disconnectButtonStyle: React.CSSProperties = {
   borderRadius: '4px',
   cursor: 'pointer',
 };
+
+const onlineDotStyle = (isOnline: boolean): React.CSSProperties => ({
+  display: 'inline-block',
+  width: '10px',
+  height: '10px',
+  borderRadius: '50%',
+  backgroundColor: isOnline ? '#44d190' : '#9bb2d6',
+  flexShrink: 0,
+});
 
 const errorStyle: React.CSSProperties = {
   backgroundColor: '#451616',

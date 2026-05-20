@@ -1,51 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileService } from '../services/api.js';
 
-const INTERESTS = ['hiking', 'rock climbing', 'painting', 'photography', 'cooking', 'baking', 'reading', 'writing', 'dancing', 'yoga', 'fitness'];
-const MUSIC_GENRES = ['rock', 'pop', 'jazz', 'classical', 'hip-hop', 'electronic', 'indie'];
-const FOOD_PREFERENCES = ['vegan', 'vegetarian', 'omnivore', 'pescatarian', 'gluten-free'];
-const OCCUPATIONS = ['Software Engineer', 'Designer', 'Data Scientist', 'Teacher', 'Musician', 'Artist', 'Doctor'];
-const LOOKING_FOR_KEYS = ['interests', 'music', 'occupation'];
+const INTERESTS = ['gaming', 'fitness', 'music', 'programming', 'art', 'reading', 'travel', 'food', 'movies', 'sports'];
+const FRIDAY_NIGHT_ACTIVITIES = ['bar_hopping', 'house_party', 'gaming', 'movies_at_home', 'restaurant', 'clubbing', 'board_games', 'concert', 'takeaway_and_chill', 'outdoor_bonfire'];
+const MUSIC_GENRES = ['rock', 'pop', 'hiphop', 'electronic', 'jazz', 'classical', 'metal', 'indie'];
+const RELATIONSHIP_GOALS = ['friendship', 'dating', 'networking', 'activity'];
 
 export const CompleteProfilePage: React.FC = () => {
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    username: '',
-    bio: '',
-    location: 'San Francisco',
-    profile_picture_url: '',
-    latitude: undefined as number | undefined,
-    longitude: undefined as number | undefined,
-  });
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [aboutMe, setAboutMe] = useState('');
+  const [profilePictureUrl, setProfilePictureUrl] = useState('');
+  const [age, setAge] = useState<number>(18);
+  const [relationshipGoal, setRelationshipGoal] = useState(RELATIONSHIP_GOALS[0]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [selectedMusic, setSelectedMusic] = useState<string[]>([]);
-  const [selectedFood, setSelectedFood] = useState('vegan');
-  const [occupation, setOccupation] = useState(OCCUPATIONS[0]);
-  const [lookingForKey, setLookingForKey] = useState(LOOKING_FOR_KEYS[0]);
-  const [lookingForValue, setLookingForValue] = useState('hiking');
-  const [maxDistanceKm, setMaxDistanceKm] = useState(30);
+  const [maxDistanceKm, setMaxDistanceKm] = useState(50);
+  const [latitude, setLatitude] = useState<number | undefined>(undefined);
+  const [longitude, setLongitude] = useState<number | undefined>(undefined);
+  const [locationMessage, setLocationMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [locationMessage, setLocationMessage] = useState('');
   const navigate = useNavigate();
+  const errorRef = useRef<HTMLDivElement>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [error]);
 
-  const handleInterestToggle = (interest: string) => {
-    setSelectedInterests((prev) =>
-      prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]
-    );
-  };
-
-  const handleMusicToggle = (genre: string) => {
-    setSelectedMusic((prev) =>
-      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
-    );
+  const toggle = (_list: string[], setList: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
+    setList(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
   };
 
   const handleUseCurrentLocation = () => {
@@ -53,57 +39,44 @@ export const CompleteProfilePage: React.FC = () => {
       setLocationMessage('Geolocation is not supported by your browser.');
       return;
     }
-
-    setLocationMessage('Getting your current location...');
+    setLocationMessage('Getting your location...');
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setFormData((prev) => ({
-          ...prev,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        }));
-        setLocationMessage('Location captured successfully.');
+      (pos) => {
+        setLatitude(pos.coords.latitude);
+        setLongitude(pos.coords.longitude);
+        setLocationMessage('Location captured.');
       },
-      () => {
-        setLocationMessage('Unable to retrieve your location.');
-      },
+      () => setLocationMessage('Unable to retrieve your location.'),
       { enableHighAccuracy: true }
     );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (selectedInterests.length === 0) { setError('Select at least one interest.'); return; }
+    if (selectedActivities.length === 0) { setError('Select at least one Friday night activity.'); return; }
+    if (selectedMusic.length === 0) { setError('Select at least one music genre.'); return; }
+
     setError('');
     setLoading(true);
 
     try {
-      // Complete profile
       await profileService.completeProfile({
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        username: formData.username || formData.first_name,
-        bio: formData.bio,
-        location: formData.location,
-        profile_picture_url: formData.profile_picture_url,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
+        first_name: firstName,
+        last_name: lastName,
+        bio: aboutMe,
+        profile_picture_url: profilePictureUrl || undefined,
+        maxDistanceKm,
+        latitude,
+        longitude,
       });
 
-      const bioDataItems = [
-        ...selectedInterests.map((interest) => ({ key: 'interests', value: interest, weight: 1.0 })),
-        ...selectedMusic.map((genre) => ({ key: 'music', value: genre, weight: 0.8 })),
-        { key: 'dietary_preference', value: selectedFood, weight: 0.9 },
-        { key: 'occupation', value: occupation, weight: 0.7 },
-      ];
-
-      if (bioDataItems.length > 0) {
-        await profileService.addBioData(bioDataItems);
-      }
-
-      await profileService.setPreferences({
-        looking_for_key: lookingForKey,
-        looking_for_value: lookingForValue,
-        max_distance_km: maxDistanceKm,
+      await profileService.updateBio({
+        age,
+        interests: selectedInterests,
+        fridayNightActivities: selectedActivities,
+        musicGenres: selectedMusic,
+        relationshipGoal,
       });
 
       navigate('/');
@@ -118,163 +91,99 @@ export const CompleteProfilePage: React.FC = () => {
     <div style={containerStyle}>
       <div style={formContainerStyle}>
         <h2>Complete Your Profile</h2>
-        {error && <div style={errorStyle}>{error}</div>}
+        <p style={{ color: 'var(--muted)', marginBottom: '1.5rem' }}>Fill in your details to start getting matched.</p>
+        {error && <div ref={errorRef} style={errorStyle}>{error}</div>}
         <form onSubmit={handleSubmit} style={formStyle}>
+
           <div style={formGroupStyle}>
-            <label>First Name</label>
-            <input
-              type="text"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleInputChange}
-              required
-              style={inputStyle}
-            />
+            <label>First Name *</label>
+            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} required style={inputStyle} />
           </div>
+
           <div style={formGroupStyle}>
             <label>Last Name</label>
-            <input
-              type="text"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleInputChange}
-              style={inputStyle}
-            />
+            <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} style={inputStyle} />
           </div>
+
           <div style={formGroupStyle}>
-            <label>Username</label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
-              style={inputStyle}
-            />
+            <label>About Me</label>
+            <textarea value={aboutMe} onChange={e => setAboutMe(e.target.value)} placeholder="Tell us about yourself..." style={{ ...inputStyle, minHeight: '100px', fontFamily: 'inherit' }} />
           </div>
+
           <div style={formGroupStyle}>
-            <label>Bio</label>
-            <textarea
-              name="bio"
-              value={formData.bio}
-              onChange={handleInputChange}
-              placeholder="Tell us about yourself..."
-              style={{...inputStyle, minHeight: '100px', fontFamily: 'inherit'}}
-            />
+            <label>Profile Picture URL (optional)</label>
+            <input type="url" value={profilePictureUrl} onChange={e => setProfilePictureUrl(e.target.value)} placeholder="https://example.com/photo.jpg" style={inputStyle} />
           </div>
+
           <div style={formGroupStyle}>
-            <label>Profile Picture URL</label>
-            <input
-              type="text"
-              name="profile_picture_url"
-              value={formData.profile_picture_url}
-              onChange={handleInputChange}
-              placeholder="https://example.com/photo.jpg"
-              style={inputStyle}
-            />
+            <label>Age *</label>
+            <input type="number" min={18} max={120} value={age} onChange={e => setAge(Number(e.target.value))} required style={inputStyle} />
           </div>
+
+          <div style={formGroupStyle}>
+            <label>What are you looking for? *</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {RELATIONSHIP_GOALS.map(goal => (
+                <button key={goal} type="button" onClick={() => setRelationshipGoal(goal)}
+                  style={{ ...chipStyle, backgroundColor: relationshipGoal === goal ? 'var(--primary)' : 'rgba(255,255,255,0.08)', color: relationshipGoal === goal ? 'white' : 'var(--text)' }}>
+                  {goal}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={formGroupStyle}>
+            <label>Interests * (pick at least 1)</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {INTERESTS.map(item => (
+                <button key={item} type="button" onClick={() => toggle(selectedInterests, setSelectedInterests, item)}
+                  style={chipStyleFor(selectedInterests.includes(item))}>
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={formGroupStyle}>
+            <label>Friday Night Activities * (pick at least 1)</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {FRIDAY_NIGHT_ACTIVITIES.map(item => (
+                <button key={item} type="button" onClick={() => toggle(selectedActivities, setSelectedActivities, item)}
+                  style={chipStyleFor(selectedActivities.includes(item))}>
+                  {item.replace(/_/g, ' ')}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={formGroupStyle}>
+            <label>Favourite Music * (pick at least 1)</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {MUSIC_GENRES.map(item => (
+                <button key={item} type="button" onClick={() => toggle(selectedMusic, setSelectedMusic, item)}
+                  style={chipStyleFor(selectedMusic.includes(item))}>
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={formGroupStyle}>
+            <label>Maximum match distance (km)</label>
+            <input type="number" min={5} max={500} value={maxDistanceKm} onChange={e => setMaxDistanceKm(Number(e.target.value))} style={inputStyle} />
+          </div>
+
           <div style={formGroupStyle}>
             <label>Location</label>
-            <select name="location" value={formData.location} onChange={handleInputChange} style={inputStyle}>
-              <option>San Francisco</option>
-              <option>New York</option>
-              <option>Los Angeles</option>
-              <option>Chicago</option>
-              <option>Austin</option>
-              <option>Denver</option>
-              <option>Seattle</option>
-              <option>Portland</option>
-              <option>Boston</option>
-              <option>Miami</option>
-            </select>
-            <button type="button" onClick={handleUseCurrentLocation} style={{ ...buttonStyle, marginTop: '0.75rem', width: 'fit-content' }}>
+            <button type="button" onClick={handleUseCurrentLocation} style={secondaryButtonStyle}>
               Use My Current Location
             </button>
-            {locationMessage && <small style={{ color: '#555' }}>{locationMessage}</small>}
+            {locationMessage && <small style={{ color: 'var(--muted)', marginTop: '0.25rem' }}>{locationMessage}</small>}
+            {latitude && <small style={{ color: '#44d190' }}>GPS: {latitude.toFixed(4)}, {longitude?.toFixed(4)}</small>}
           </div>
-          <div style={formGroupStyle}>
-            <label>Favorite Music</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {MUSIC_GENRES.map((genre) => (
-                <button
-                  key={genre}
-                  type="button"
-                  onClick={() => handleMusicToggle(genre)}
-                  style={{
-                    ...interestButtonStyle,
-                    backgroundColor: selectedMusic.includes(genre) ? 'var(--primary)' : 'rgba(255,255,255,0.08)',
-                    color: selectedMusic.includes(genre) ? 'white' : 'var(--text)',
-                  }}
-                >
-                  {genre}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div style={formGroupStyle}>
-            <label>Dietary Preference</label>
-            <select value={selectedFood} onChange={(e) => setSelectedFood(e.target.value)} style={inputStyle}>
-              {FOOD_PREFERENCES.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-          <div style={formGroupStyle}>
-            <label>Occupation</label>
-            <select value={occupation} onChange={(e) => setOccupation(e.target.value)} style={inputStyle}>
-              {OCCUPATIONS.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-          <div style={formGroupStyle}>
-            <label>What are you looking for?</label>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <select value={lookingForKey} onChange={(e) => setLookingForKey(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: '120px' }}>
-                {LOOKING_FOR_KEYS.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={lookingForValue}
-                onChange={(e) => setLookingForValue(e.target.value)}
-                placeholder="Value e.g. hiking"
-                style={{ ...inputStyle, flex: 2, minWidth: '160px' }}
-              />
-            </div>
-          </div>
-          <div style={formGroupStyle}>
-            <label>Maximum distance (km)</label>
-            <input
-              type="number"
-              min={5}
-              max={200}
-              value={maxDistanceKm}
-              onChange={(e) => setMaxDistanceKm(Number(e.target.value))}
-              style={inputStyle}
-            />
-          </div>
-          <div style={formGroupStyle}>
-            <label>Select Your Interests (at least 1)</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {INTERESTS.map((interest) => (
-                <button
-                  key={interest}
-                  type="button"
-                  onClick={() => handleInterestToggle(interest)}
-                  style={{
-                    ...interestButtonStyle,
-                    backgroundColor: selectedInterests.includes(interest) ? 'var(--primary)' : 'rgba(255,255,255,0.08)',
-                    color: selectedInterests.includes(interest) ? 'white' : 'var(--text)',
-                  }}
-                >
-                  {interest}
-                </button>
-              ))}
-            </div>
-          </div>
-          <button type="submit" disabled={loading || selectedInterests.length === 0} style={buttonStyle}>
-            {loading ? 'Saving...' : 'Continue'}
+
+          <button type="submit" disabled={loading} style={buttonStyle}>
+            {loading ? 'Saving...' : 'Complete Profile'}
           </button>
         </form>
       </div>
@@ -285,10 +194,10 @@ export const CompleteProfilePage: React.FC = () => {
 const containerStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'center',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   minHeight: '100vh',
   backgroundColor: 'var(--background)',
-  padding: '1rem',
+  padding: '2rem 1rem',
 };
 
 const formContainerStyle: React.CSSProperties = {
@@ -301,17 +210,8 @@ const formContainerStyle: React.CSSProperties = {
   border: '1px solid var(--border)',
 };
 
-const formStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '1.5rem',
-};
-
-const formGroupStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.5rem',
-};
+const formStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '1.5rem' };
+const formGroupStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '0.5rem' };
 
 const inputStyle: React.CSSProperties = {
   padding: '0.75rem',
@@ -323,27 +223,49 @@ const inputStyle: React.CSSProperties = {
 };
 
 const buttonStyle: React.CSSProperties = {
-  padding: '0.75rem',
+  padding: '0.875rem',
   backgroundColor: 'var(--primary)',
   color: 'white',
   border: 'none',
   borderRadius: '12px',
   fontSize: '1rem',
+  fontWeight: 600,
   cursor: 'pointer',
 };
 
-const interestButtonStyle: React.CSSProperties = {
+const secondaryButtonStyle: React.CSSProperties = {
+  ...buttonStyle,
+  backgroundColor: 'transparent',
+  border: '1px solid var(--border)',
+  color: 'var(--text)',
+  width: 'fit-content',
+};
+
+const chipStyle: React.CSSProperties = {
   padding: '0.5rem 1rem',
   border: '1px solid var(--border)',
   borderRadius: '20px',
   cursor: 'pointer',
   fontSize: '0.9rem',
   transition: 'all 0.2s',
+  backgroundColor: 'rgba(255,255,255,0.08)',
+  color: 'var(--text)',
 };
+
+const chipStyleFor = (selected: boolean): React.CSSProperties => ({
+  ...chipStyle,
+  backgroundColor: selected ? 'var(--primary)' : 'rgba(124, 152, 255, 0.07)',
+  border: selected ? '2px solid var(--primary)' : '1px solid rgba(124, 152, 255, 0.28)',
+  color: selected ? 'white' : 'var(--muted)',
+  fontWeight: selected ? 700 : 400,
+  boxShadow: selected ? '0 0 10px rgba(124, 152, 255, 0.5)' : 'none',
+  transform: selected ? 'scale(1.05)' : 'scale(1)',
+});
 
 const errorStyle: React.CSSProperties = {
   backgroundColor: '#451616',
   color: '#f8d7da',
   padding: '1rem',
   borderRadius: '12px',
+  marginBottom: '1rem',
 };

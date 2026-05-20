@@ -8,20 +8,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class ServerApplication {
 
     public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.configure()
+        Dotenv.configure()
                 .ignoreIfMissing()
-                .load();
-
-        if (dotenv.get("JWT_SECRET") == null) {
-            dotenv = Dotenv.configure()
-                    .directory("./server")
-                    .ignoreIfMissing()
-                    .load();
-        }
-
-        dotenv.entries().forEach(e ->
-                System.setProperty(e.getKey(), e.getValue())
-        );
+                .load()
+                .entries()
+                .forEach(e -> {
+                    if (System.getenv(e.getKey()) == null) {
+                        System.setProperty(e.getKey(), e.getValue());
+                    }
+                });
         SpringApplication.run(ServerApplication.class, args);
     }
 

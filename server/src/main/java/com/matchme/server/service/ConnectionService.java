@@ -1,5 +1,6 @@
 package com.matchme.server.service;
 
+import com.matchme.server.config.WebSocketEventHandler;
 import com.matchme.server.dto.response.ConnectionRequestsResponse;
 import com.matchme.server.dto.response.ConnectionsResponse;
 import com.matchme.server.dto.response.SimpleResponse;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -22,6 +24,7 @@ public class ConnectionService {
 
     private final ConnectionRepository connectionRepository;
     private final UserRepository userRepository;
+    private final WebSocketEventHandler webSocketEventHandler;
 
     public ConnectionsResponse getConnections(UUID userId) {
         List<UUID> connections = connectionRepository
@@ -51,7 +54,7 @@ public class ConnectionService {
         }
 
         boolean alreadyExists = connectionRepository
-                .findByUserIdAndStatuses(requesterId, List.of("accepted", "pending", "rejected"))
+                .findByUserIdAndStatuses(requesterId, List.of("accepted", "pending"))
                 .stream()
                 .anyMatch(c -> c.getRequester().getId().equals(targetId)
                         || c.getReceiver().getId().equals(targetId));
@@ -71,17 +74,17 @@ public class ConnectionService {
         connection.setStatus("pending");
 
         connectionRepository.save(connection);
+
+        webSocketEventHandler.forwardToUser(targetId, "connection-request",
+                Map.of("fromUserId", requesterId.toString()));
+
         return new SimpleResponse("Request sent");
     }
 
     public SimpleResponse acceptRequest(UUID userId, UUID requesterId) {
         Connection connection = connectionRepository
-                .findByRequesterIdAndReceiverId(requesterId, userId)
+                .findByRequesterIdAndReceiverIdAndStatus(requesterId, userId, "pending")
                 .orElseThrow(() -> new BadRequestException("Connection request not found"));
-
-        if (!connection.getStatus().equals("pending")) {
-            throw new BadRequestException("Connection request is not pending");
-        }
 
         connection.setStatus("accepted");
         connection.setAcceptedAt(java.time.LocalDateTime.now());
@@ -92,7 +95,7 @@ public class ConnectionService {
 
     public SimpleResponse declineRequest(UUID userId, UUID requesterId) {
         Connection connection = connectionRepository
-                .findByRequesterIdAndReceiverId(requesterId, userId)
+                .findByRequesterIdAndReceiverIdAndStatus(requesterId, userId, "pending")
                 .orElseThrow(() -> new BadRequestException("Connection request not found"));
 
         connection.setStatus("rejected");

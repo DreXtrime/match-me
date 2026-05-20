@@ -41,6 +41,7 @@ public class ProfileService {
         profile.setFirstName(request.firstName());
         profile.setLastName(request.lastName());
         profile.setAboutMe(request.aboutMe());
+        profile.setProfilePictureUrl(request.profilePictureUrl());
         profile.setMaxDistanceKm(request.maxDistanceKm());
         profile.setLatitude(request.latitude());
         profile.setLongitude(request.longitude());
@@ -53,23 +54,40 @@ public class ProfileService {
         Profile profile = profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new NotFoundException("Complete your profile before updating bio"));
 
-        if (hasDuplicates(request.interests()) ||
-                hasDuplicates(request.fridayNightActivities()) ||
-                hasDuplicates(request.musicGenres())) {
-            throw new BadRequestException("Duplicate values are not allowed");
+        if (request.interests() != null && request.interests().size() > 0) {
+            if (hasDuplicates(request.interests())) {
+                throw new BadRequestException("Duplicate values are not allowed");
+            }
+            profile.setInterests(request.interests().stream()
+                    .map(Enum::name)
+                    .collect(Collectors.toList()));
         }
 
-        profile.setAge(request.age());
-        profile.setInterests(request.interests().stream()
-                .map(Enum::name)
-                .collect(Collectors.toList()));
-        profile.setFridayNightActivities(request.fridayNightActivities().stream()
-                .map(Enum::name)
-                .collect(Collectors.toList()));
-        profile.setMusicGenres(request.musicGenres().stream()
-                .map(Enum::name)
-                .collect(Collectors.toList()));
-        profile.setRelationshipGoal(request.relationshipGoal().name());
+        if (request.age() != null) {
+            profile.setAge(request.age());
+        }
+
+        if (request.fridayNightActivities() != null && request.fridayNightActivities().size() > 0) {
+            if (hasDuplicates(request.fridayNightActivities())) {
+                throw new BadRequestException("Duplicate values are not allowed");
+            }
+            profile.setFridayNightActivities(request.fridayNightActivities().stream()
+                    .map(Enum::name)
+                    .collect(Collectors.toList()));
+        }
+
+        if (request.musicGenres() != null && request.musicGenres().size() > 0) {
+            if (hasDuplicates(request.musicGenres())) {
+                throw new BadRequestException("Duplicate values are not allowed");
+            }
+            profile.setMusicGenres(request.musicGenres().stream()
+                    .map(Enum::name)
+                    .collect(Collectors.toList()));
+        }
+
+        if (request.relationshipGoal() != null) {
+            profile.setRelationshipGoal(request.relationshipGoal().name());
+        }
 
         profileRepository.save(profile);
         return new SimpleResponse("Updated");

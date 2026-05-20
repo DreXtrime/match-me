@@ -13,6 +13,8 @@ public interface ConnectionRepository extends JpaRepository<Connection, UUID> {
     List<Connection> findByReceiverIdAndStatus(UUID receiverId, String status);
     Optional<Connection> findByRequesterIdAndReceiverId(UUID requesterId, UUID receiverId);
 
+    Optional<Connection> findByRequesterIdAndReceiverIdAndStatus(UUID requesterId, UUID receiverId, String status);
+
     @Query("""
                 SELECT c FROM Connection c
                 WHERE (c.requester.id = :userId OR c.receiver.id = :userId)

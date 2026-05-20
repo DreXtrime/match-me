@@ -1,34 +1,46 @@
+export interface AuthResponse {
+  userId: string;
+  token: string;
+}
+
 export interface User {
   id: string;
-  email?: string;
-  username?: string;
-  first_name?: string;
-  last_name?: string;
-  is_online?: boolean;
+  name?: string;
+  profilePicture?: string;
+  isOnline?: boolean;
 }
 
 export interface Profile {
   id: string;
-  username?: string;
+  // camelCase from backend
+  firstName?: string;
+  lastName?: string;
+  aboutMe?: string;
+  profilePicture?: string;
+  maxDistanceKm?: number;
+  latitude?: number;
+  longitude?: number;
+  // snake_case aliases used in pages (normalized in api.ts)
   first_name?: string;
   last_name?: string;
   bio?: string;
   profile_picture_url?: string;
   location?: string;
-  is_online?: boolean;
 }
 
 export interface BioData {
   id: string;
-  key: string;
-  value: string;
-  weight: number;
+  age?: number;
+  interests?: string[];
+  fridayNightActivities?: string[];
+  musicGenres?: string[];
+  relationshipGoal?: string;
 }
 
 export interface Connection {
   id: string;
-  requester_id: string;
-  receiver_id: string;
+  requester_id?: string;
+  receiver_id?: string;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
   accepted_at?: string;
@@ -46,9 +58,4 @@ export interface Message {
 export interface Chat {
   id: string;
   lastMessageTime: string;
-}
-
-export interface AuthResponse {
-  user: { id: string; email: string };
-  token: string;
 }

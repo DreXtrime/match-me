@@ -44,7 +44,7 @@ export const DashboardPage: React.FC = () => {
     <div style={containerStyle}>
       <div style={contentStyle}>
         <div style={welcomeBoxStyle}>
-          <h2>Welcome, {profile.first_name || profile.username}! 👋</h2>
+          <h2>Welcome, {profile.first_name || 'there'}! 👋</h2>
           <p>You're all set up and ready to meet amazing people.</p>
         </div>
 
@@ -54,30 +54,6 @@ export const DashboardPage: React.FC = () => {
             <p>Browse and connect with people who share your interests.</p>
             <button onClick={() => navigate('/recommendations')} style={buttonStyle}>
               Start Discovering
-            </button>
-          </div>
-
-          <div style={cardStyle}>
-            <h3>❤️ My Connections</h3>
-            <p>View and manage your connections and pending requests.</p>
-            <button onClick={() => navigate('/connections')} style={buttonStyle}>
-              View Connections
-            </button>
-          </div>
-
-          <div style={cardStyle}>
-            <h3>💬 Messages</h3>
-            <p>Chat with your connections and get to know them better.</p>
-            <button onClick={() => navigate('/chats')} style={buttonStyle}>
-              Open Chat
-            </button>
-          </div>
-
-          <div style={cardStyle}>
-            <h3>👤 Profile</h3>
-            <p>Update your profile information and preferences.</p>
-            <button onClick={() => navigate('/profile')} style={buttonStyle}>
-              Edit Profile
             </button>
           </div>
         </div>

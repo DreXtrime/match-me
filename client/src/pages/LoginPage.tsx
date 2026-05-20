@@ -28,7 +28,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     try {
       const response = await authService.login(email, password);
       localStorage.setItem('token', response.token);
-      localStorage.setItem('userId', response.user.id);
+      localStorage.setItem('userId', response.userId);
       onLogin();
       navigate('/');
     } catch (err) {

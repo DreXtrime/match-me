@@ -1,7 +1,9 @@
 package com.matchme.server.service;
 
 import com.matchme.server.dto.response.*;
+import com.matchme.server.exception.BadRequestException;
 import com.matchme.server.exception.NotFoundException;
+import com.matchme.server.mapper.ServerMapper;
 import com.matchme.server.model.Profile;
 import com.matchme.server.model.User;
 import com.matchme.server.repository.ConnectionRepository;
@@ -22,6 +24,14 @@ public class UserService {
     private final ProfileRepository profileRepository;
     private final ConnectionRepository connectionRepository;
     private final RecommendationService recommendationService;
+    private final ServerMapper mapper;
+
+    private String resolveProfilePicture(User user, Profile profile) {
+        if (profile != null && profile.getProfilePictureUrl() != null && !profile.getProfilePictureUrl().isBlank()) {
+            return profile.getProfilePictureUrl();
+        }
+        return GravatarUtils.getGravatarUrl(user.getEmail());
+    }
 
     private boolean canViewProfile(UUID requesterId, UUID targetId) {
         if (requesterId.equals(targetId)) return true;
@@ -40,100 +50,70 @@ public class UserService {
 
         if (hasConnection) return true;
 
-        return recommendationService.getRecommendations(requesterId)
-                .recommendations()
-                .contains(targetId);
+        return recommendationService.getRecommendations(requesterId).recommendations().contains(targetId);
     }
 
-    // /me
+    private UserResponse buildUserResponse(User user, Profile profile) {
+        String name = profile != null ? profile.getFirstName() + " " + profile.getLastName() : "";
+        return new UserResponse(user.getId(), name, resolveProfilePicture(user, profile), user.isOnline());
+    }
+
     public UserResponse getMe(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        Profile profile = profileRepository.findByUserId(userId).orElse(null);
-        String name = profile != null ? profile.getFirstName() + " " + profile.getLastName() : "";
-        return new UserResponse(user.getId(), name, GravatarUtils.getGravatarUrl(user.getEmail()));
+        return buildUserResponse(user, profileRepository.findByUserId(userId).orElse(null));
     }
 
-    // /me/profile
     public MeProfileResponse getMeProfile(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Profile profile = profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new NotFoundException("Profile not found"));
+                .orElseThrow(() -> new BadRequestException("Profile not found"));
         return new MeProfileResponse(
                 user.getId(),
                 user.getEmail(),
                 profile.getFirstName(),
                 profile.getLastName(),
                 profile.getAboutMe(),
-                GravatarUtils.getGravatarUrl(user.getEmail()),
+                resolveProfilePicture(user, profile),
                 profile.getMaxDistanceKm(),
                 profile.getLatitude(),
                 profile.getLongitude()
         );
     }
 
-    // /me/bio
     public BioResponse getMeBio(UUID userId) {
         Profile profile = profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new NotFoundException("Profile not found"));
-        return new BioResponse(
-                userId,
-                profile.getAge(),
-                profile.getInterests(),
-                profile.getFridayNightActivities(),
-                profile.getMusicGenres(),
-                profile.getRelationshipGoal()
-        );
+                .orElseThrow(() -> new BadRequestException("Profile not found"));
+        return mapper.toBioResponse(userId, profile);
     }
 
-    // /users/:id
     public UserResponse getUserById(UUID requesterId, UUID targetId) {
-        if (!canViewProfile(requesterId, targetId)) {
-            throw new NotFoundException("Not found");
-        }
+        if (!canViewProfile(requesterId, targetId)) throw new NotFoundException("Not found");
         User user = userRepository.findById(targetId)
                 .orElseThrow(() -> new NotFoundException("Not found"));
-        Profile profile = profileRepository.findByUserId(targetId).orElse(null);
-        String name = "";
-        if (profile != null) {
-            name = profile.getFirstName() + " " + profile.getLastName();
-        }
-        return new UserResponse(user.getId(), name, GravatarUtils.getGravatarUrl(user.getEmail()));
+        return buildUserResponse(user, profileRepository.findByUserId(targetId).orElse(null));
     }
 
-    // /users/:id/profile
     public UserProfileResponse getUserProfile(UUID requesterId, UUID targetId) {
-        if (!canViewProfile(requesterId, targetId)) {
-            throw new NotFoundException("Not found");
-        }
+        if (!canViewProfile(requesterId, targetId)) throw new NotFoundException("Not found");
         Profile profile = profileRepository.findByUserId(targetId)
                 .orElseThrow(() -> new NotFoundException("Not found"));
         User user = userRepository.findById(targetId)
                 .orElseThrow(() -> new NotFoundException("Not found"));
         return new UserProfileResponse(
-                profile.getId(),
+                targetId,
                 profile.getFirstName(),
                 profile.getLastName(),
                 profile.getAboutMe(),
-                GravatarUtils.getGravatarUrl(user.getEmail())
+                resolveProfilePicture(user, profile)
         );
     }
 
-    // /users/:id/bio
     public BioResponse getUserBio(UUID requesterId, UUID targetId) {
-        if (!canViewProfile(requesterId, targetId)) {
-            throw new NotFoundException("Not found");
-        }
+        if (!canViewProfile(requesterId, targetId)) throw new NotFoundException("Not found");
         Profile profile = profileRepository.findByUserId(targetId)
                 .orElseThrow(() -> new NotFoundException("Not found"));
-        return new BioResponse(
-                targetId,
-                profile.getAge(),
-                profile.getInterests(),
-                profile.getFridayNightActivities(),
-                profile.getMusicGenres(),
-                profile.getRelationshipGoal()
-        );
+        return mapper.toBioResponse(targetId, profile);
     }
 }
