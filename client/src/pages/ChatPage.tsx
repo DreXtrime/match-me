@@ -189,7 +189,12 @@ export const ChatPage: React.FC = () => {
                 <div style={messageStyle(msg.sender_id === localUserId)}>
                   <p style={messageContentStyle}>{msg.content}</p>
                   <small style={messageTimeStyle}>
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(msg.created_at).toLocaleString([], {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </small>
                 </div>
               </div>
