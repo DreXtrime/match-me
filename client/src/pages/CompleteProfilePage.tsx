@@ -125,7 +125,7 @@ export const CompleteProfilePage: React.FC = () => {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
               {RELATIONSHIP_GOALS.map(goal => (
                 <button key={goal} type="button" onClick={() => setRelationshipGoal(goal)}
-                  style={{ ...chipStyle, backgroundColor: relationshipGoal === goal ? 'var(--primary)' : 'rgba(255,255,255,0.08)', color: relationshipGoal === goal ? 'white' : 'var(--text)' }}>
+                  style={chipStyleFor(relationshipGoal === goal)}>
                   {goal}
                 </button>
               ))}
@@ -254,9 +254,9 @@ const chipStyle: React.CSSProperties = {
 
 const chipStyleFor = (selected: boolean): React.CSSProperties => ({
   ...chipStyle,
-  backgroundColor: selected ? 'var(--primary)' : 'rgba(124, 152, 255, 0.07)',
-  border: selected ? '2px solid var(--primary)' : '1px solid rgba(124, 152, 255, 0.28)',
-  color: selected ? 'white' : 'var(--muted)',
+  background: selected ? 'var(--primary)' : 'rgba(124, 152, 255, 0.04)',
+  border: selected ? '2px solid var(--primary)' : '1px solid rgba(255, 255, 255, 0.1)',
+  color: 'white',
   fontWeight: selected ? 700 : 400,
   boxShadow: selected ? '0 0 10px rgba(124, 152, 255, 0.5)' : 'none',
   transform: selected ? 'scale(1.05)' : 'scale(1)',
