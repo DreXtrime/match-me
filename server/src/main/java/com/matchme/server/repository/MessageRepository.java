@@ -30,15 +30,11 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
     @Query("UPDATE Message m SET m.isRead = true, m.readAt = :now WHERE m.receiver.id = :userId AND m.sender.id = :otherId AND m.isRead = false")
     int markMessagesAsRead(@Param("userId") UUID userId, @Param("otherId") UUID otherId, @Param("now") LocalDateTime now);
 
-    // Returns (partnerId, lastMessageTime) pairs in one query instead of 2+N queries in getChats
-    @Query("""
-                SELECT
-                    CASE WHEN m.sender.id = :userId THEN m.receiver.id ELSE m.sender.id END,
-                    MAX(m.createdAt)
-                FROM Message m
-                WHERE m.sender.id = :userId OR m.receiver.id = :userId
-                GROUP BY CASE WHEN m.sender.id = :userId THEN m.receiver.id ELSE m.sender.id END
-                ORDER BY MAX(m.createdAt) DESC
-            """)
-    List<Object[]> findChatPartners(@Param("userId") UUID userId);
+    // Two GROUP BY queries (sent + received) — merged in the service.
+    // Avoids the CASE-in-GROUP-BY trick which H2's stricter SQL dialect rejects.
+    @Query("SELECT m.receiver.id, MAX(m.createdAt) FROM Message m WHERE m.sender.id = :userId GROUP BY m.receiver.id")
+    List<Object[]> findSentChatPartners(@Param("userId") UUID userId);
+
+    @Query("SELECT m.sender.id, MAX(m.createdAt) FROM Message m WHERE m.receiver.id = :userId GROUP BY m.sender.id")
+    List<Object[]> findReceivedChatPartners(@Param("userId") UUID userId);
 }

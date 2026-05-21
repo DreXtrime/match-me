@@ -189,16 +189,19 @@ export const ChatPage: React.FC = () => {
               <p>No messages yet. Start the conversation! 💬</p>
             </div>
           ) : (
-            messages.map((msg) => (
-              <div key={msg.id} style={messageWrapperStyle(msg.sender_id === localUserId)}>
-                <div style={messageStyle(msg.sender_id === localUserId)}>
-                  <p style={messageContentStyle}>{msg.content}</p>
-                  <small style={messageTimeStyle}>
-                    {formatMessageTime(msg.created_at)}
-                  </small>
+            <>
+              <div style={{ flex: 1, minHeight: 0 }} />
+              {messages.map((msg) => (
+                <div key={msg.id} style={messageWrapperStyle(msg.sender_id === localUserId)}>
+                  <div style={messageStyle(msg.sender_id === localUserId)}>
+                    <p style={messageContentStyle}>{msg.content}</p>
+                    <small style={messageTimeStyle}>
+                      {formatMessageTime(msg.created_at)}
+                    </small>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </>
           )}
           {isTyping && <div style={typingIndicatorStyle}>
             <span style={typingDotStyle} />
@@ -238,7 +241,7 @@ function formatMessageTime(dateStr: string): string {
 }
 
 const containerStyle: React.CSSProperties = {
-  minHeight: 'calc(100vh - 60px)',
+  minHeight: 'calc(100dvh - 60px)',
   backgroundColor: 'var(--background)',
   display: 'flex',
   justifyContent: 'center',
@@ -267,7 +270,9 @@ const backButtonStyle: React.CSSProperties = {
   background: 'rgba(124, 152, 255, 0.12)',
   border: '1px solid rgba(124, 152, 255, 0.25)',
   color: 'var(--primary)',
-  fontSize: '1.1rem',
+  fontSize: '1.4rem',
+  fontWeight: 700,
+  lineHeight: 1,
   cursor: 'pointer',
   padding: 0,
   width: '36px',
@@ -321,9 +326,9 @@ const messagesContainerStyle: React.CSSProperties = {
   padding: '1rem',
   display: 'flex',
   flexDirection: 'column',
-  justifyContent: 'flex-end',
   gap: '0.75rem',
   minHeight: 0,
+  overscrollBehavior: 'contain',
 };
 
 const headerNameWrapStyle: React.CSSProperties = {

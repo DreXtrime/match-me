@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 @Service
@@ -103,9 +104,20 @@ public class MessageService {
 
     @Transactional(readOnly = true)
     public ChatsResponse getChats(UUID userId) {
-        List<ChatItemResponse> chats = messageRepository.findChatPartners(userId)
-                .stream()
-                .map(row -> new ChatItemResponse((UUID) row[0], (LocalDateTime) row[1]))
+        Map<UUID, LocalDateTime> latestPerPartner = new HashMap<>();
+        BiFunction<LocalDateTime, LocalDateTime, LocalDateTime> keepLatest =
+                (a, b) -> a.isAfter(b) ? a : b;
+
+        for (Object[] row : messageRepository.findSentChatPartners(userId)) {
+            latestPerPartner.merge((UUID) row[0], (LocalDateTime) row[1], keepLatest);
+        }
+        for (Object[] row : messageRepository.findReceivedChatPartners(userId)) {
+            latestPerPartner.merge((UUID) row[0], (LocalDateTime) row[1], keepLatest);
+        }
+
+        List<ChatItemResponse> chats = latestPerPartner.entrySet().stream()
+                .map(e -> new ChatItemResponse(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparing(ChatItemResponse::lastMessageTime).reversed())
                 .collect(Collectors.toList());
         return new ChatsResponse(chats);
     }

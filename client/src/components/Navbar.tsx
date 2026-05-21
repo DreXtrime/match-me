@@ -47,8 +47,10 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, unreadCount = 0
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="mobile-menu-toggle"
               style={mobileMenuToggleStyle}
+              aria-label="Open menu"
             >
               ☰
+              {(unreadCount > 0 || pendingCount > 0) && <span style={notificationDotStyle} />}
             </button>
           </>
         ) : (
@@ -223,6 +225,18 @@ const mobileMenuToggleStyle: React.CSSProperties = {
   color: 'var(--text)',
   fontSize: '1.5rem',
   cursor: 'pointer',
+  position: 'relative',
+};
+
+const notificationDotStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: '6px',
+  right: '6px',
+  width: '10px',
+  height: '10px',
+  borderRadius: '50%',
+  backgroundColor: '#f76969',
+  border: '2px solid rgba(8, 16, 29, 0.96)',
 };
 
 const mobileMenuStyle: React.CSSProperties = {
