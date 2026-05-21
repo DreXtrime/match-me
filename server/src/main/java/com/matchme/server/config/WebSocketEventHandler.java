@@ -40,7 +40,7 @@ public class WebSocketEventHandler {
             String token = client.getHandshakeData().getUrlParams().get("token").get(0);
             String userIdStr = client.getHandshakeData().getUrlParams().get("userId").get(0);
             if (token == null || userIdStr == null || !jwtUtil.isTokenValid(token)) return null;
-            return UUID.fromString(userIdStr);
+            return jwtUtil.extractUserId(token);
         } catch (Exception e) {
             return null;
         }
