@@ -14,6 +14,7 @@ A recommendation platform that connects users based on multiple datapoints.
 - Profile pictures: users can set a custom URL via `PUT /me/profile`. If none is set, the backend falls back to a Gravatar URL derived from the user's email. No image uploads or storage needed.
 - GPS location is requested from the browser via the Geolocation API. Coordinates are stored on the profile and used as a hard filter before scoring — only users within the chosen `maxDistanceKm` radius are recommended.
 - Real-time features (new messages, typing indicators, unread count updates) use Socket.IO. The client connects on login and disconnects on logout. No polling.
+- Dates are only shown under chat messages sent yesterday or earlier
 
 ## Matching Algorithm
 
@@ -34,6 +35,7 @@ The backend uses an **in-memory H2 database by default** — no database install
 
 ```bash
 cd server
+chmod +x ./mvnw
 ./mvnw spring-boot:run
 ```
 
