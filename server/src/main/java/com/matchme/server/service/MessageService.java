@@ -87,7 +87,7 @@ public class MessageService {
     @Transactional
     public Page<MessageResponse> getChatMessages(UUID userId, UUID otherId, int page, int size) {
         if (!isConnected(userId, otherId)) {
-            throw new BadRequestException("You can only view messages with connected users");
+            throw new NotFoundException("Not Found");
         }
 
         Pageable pageable = PageRequest.of(page, size);
