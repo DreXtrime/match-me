@@ -95,6 +95,8 @@ All seeded users have the password: `password`
 <details>
 <summary>Docker (recommended)</summary>
 
+Make sure Docker is installed
+
 ```bash
 docker compose up -d
 ```
@@ -106,7 +108,7 @@ This starts a PostgreSQL instance on port **5433** with the credentials already 
 <details>
 <summary>Manual</summary>
 
-Make sure PostgreSQL is running, then create the database:
+Make sure PostgreSQL is installed and running, then create the database:
 ```bash
 createdb matchme
 ```
