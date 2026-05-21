@@ -262,7 +262,7 @@ const backButtonStyle: React.CSSProperties = {
   background: 'none',
   border: 'none',
   color: 'var(--primary)',
-  fontSize: '1rem',
+  fontSize: '0.85rem',
   cursor: 'pointer',
   padding: '0',
   marginRight: '1rem',

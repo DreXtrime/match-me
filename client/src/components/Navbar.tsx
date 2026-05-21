@@ -21,7 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, unreadCount = 0
 
   return (
     <nav style={navStyle}>
-      <div style={navContentStyle}>
+      <div className="mobile-compact-pad" style={navContentStyle}>
         <div style={logoStyle} onClick={() => navigate('/')}>
           <span style={logoIconStyle}>💓</span>
           <span style={logoTextStyle}>Match-Me</span>
@@ -139,6 +139,7 @@ const logoIconStyle: React.CSSProperties = {
 const logoTextStyle: React.CSSProperties = {
   fontSize: '1.3rem',
   fontWeight: 700,
+  whiteSpace: 'nowrap',
   background: 'linear-gradient(135deg, var(--primary), #a459ff)',
   backgroundClip: 'text',
   WebkitBackgroundClip: 'text',
@@ -146,7 +147,6 @@ const logoTextStyle: React.CSSProperties = {
 };
 
 const navLinksStyle: React.CSSProperties = {
-  display: 'flex',
   gap: '0.5rem',
   alignItems: 'center',
 };
