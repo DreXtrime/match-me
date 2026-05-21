@@ -76,7 +76,7 @@ public class RecommendationService {
     }
 
     private Set<UUID> getConnectionIds(UUID userId) {
-        return new HashSet<>(connectionRepository.findPartnerIdsByStatuses(userId, List.of("accepted", "pending")));
+        return new HashSet<>(connectionRepository.findPartnerIdsByStatuses(userId, List.of("accepted", "pending", "rejected")));
     }
 
     private boolean isWithinDistance(Profile requester, Profile candidate) {
