@@ -8,6 +8,7 @@ import { RecommendationsPage } from './pages/RecommendationsPage.js';
 import { ConnectionsPage } from './pages/ConnectionsPage.js';
 import { ChatsPage } from './pages/ChatsPage.js';
 import { ChatPage } from './pages/ChatPage.js';
+import { UserProfilePage } from './pages/UserProfilePage.js';
 import { CompleteProfilePage } from './pages/CompleteProfilePage.js';
 import { ProfilePage } from './pages/ProfilePage.js';
 import { messageService, connectionService } from './services/api.js';
@@ -100,6 +101,7 @@ function AppContent({ isAuthenticated, onLogin, onLogout }: AppContentProps) {
         <Route path="/connections" element={isAuthenticated ? <ConnectionsPage /> : <Navigate to="/login" />} />
         <Route path="/chats" element={isAuthenticated ? <ChatsPage /> : <Navigate to="/login" />} />
         <Route path="/chat/:userId" element={isAuthenticated ? <ChatPage /> : <Navigate to="/login" />} />
+        <Route path="/users/:userId" element={isAuthenticated ? <UserProfilePage /> : <Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </>

@@ -161,8 +161,8 @@ export const ChatPage: React.FC = () => {
   );
 
   return (
-    <div style={containerStyle}>
-      <div style={chatBoxStyle}>
+    <div className="mobile-no-pad" style={containerStyle}>
+      <div className="mobile-edge-card" style={chatBoxStyle}>
         <div style={headerStyle}>
           <button onClick={() => navigate('/chats')} style={backButtonStyle}>← Back</button>
           <div style={headerContentStyle}>
@@ -189,7 +189,7 @@ export const ChatPage: React.FC = () => {
                 <div style={messageStyle(msg.sender_id === localUserId)}>
                   <p style={messageContentStyle}>{msg.content}</p>
                   <small style={messageTimeStyle}>
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {formatMessageTime(msg.created_at)}
                   </small>
                 </div>
               </div>
@@ -222,6 +222,15 @@ export const ChatPage: React.FC = () => {
     </div>
   );
 };
+
+function formatMessageTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (isToday) return time;
+  return `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`;
+}
 
 const containerStyle: React.CSSProperties = {
   minHeight: 'calc(100vh - 60px)',

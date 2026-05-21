@@ -84,7 +84,7 @@ export const ChatsPage: React.FC = () => {
   }
 
   return (
-    <div style={containerStyle}>
+    <div className="mobile-compact-pad" style={containerStyle}>
       <div style={contentStyle}>
         <div style={headerSectionStyle}>
           <h1 style={titleStyle}>Messages</h1>

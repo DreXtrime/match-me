@@ -138,7 +138,7 @@ export const RecommendationsPage: React.FC = () => {
   const progress = ((currentIndex + 1) / recommendations.length) * 100;
 
   return (
-    <div style={containerStyle}>
+    <div className="mobile-compact-pad" style={containerStyle}>
       <div style={headerStyle}>
         <h1 style={titleStyle}>Discover</h1>
         <div style={progressBarStyle}>
@@ -154,7 +154,7 @@ export const RecommendationsPage: React.FC = () => {
       <div style={cardWrapperStyle}>
         <div style={cardStyle} key={currentProfile.id}>
           {/* Profile Image */}
-          <div style={profileImageContainerStyle}>
+          <div className="mobile-shorter-image" style={profileImageContainerStyle}>
             {currentProfile.profile_picture_url ? (
               <img
                 src={currentProfile.profile_picture_url}

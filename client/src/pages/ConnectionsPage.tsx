@@ -115,12 +115,12 @@ export const ConnectionsPage: React.FC = () => {
           <div style={sectionStyle}>
             <h2>Pending Requests ({pendingRequests.length})</h2>
             {pendingRequests.map((req) => (
-              <div key={req.id} style={requestCardStyle}>
+              <div key={req.id} className="mobile-stack" style={requestCardStyle}>
                 <div>
                   <h3>{req.user?.name || 'User'}</h3>
                   <p style={{ fontSize: '0.9rem', color: 'var(--muted)' }}>Wants to connect with you</p>
                 </div>
-                <div style={requestActionsStyle}>
+                <div className="mobile-grow-buttons" style={requestActionsStyle}>
                   <button onClick={() => handleAccept(req.id)} style={acceptButtonStyle}>
                     ✓ Accept
                   </button>
@@ -139,12 +139,15 @@ export const ConnectionsPage: React.FC = () => {
             <p>No connections yet. Start by discovering new people!</p>
           ) : (
             connections.map((conn) => (
-              <div key={conn.id} style={connectionCardStyle}>
+              <div key={conn.id} className="mobile-stack" style={connectionCardStyle}>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <h3 style={{ margin: 0 }}>{conn.user?.name || 'User'}</h3>
                   <span style={onlineDotStyle(conn.user?.isOnline || false)} title={conn.user?.isOnline ? 'Online' : 'Offline'} />
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div className="mobile-grow-buttons" style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => navigate(`/users/${conn.id}`)} style={profileButtonStyle}>
+                    Profile
+                  </button>
                   <button onClick={() => navigate(`/chat/${conn.id}`)} style={chatButtonStyle}>
                     Chat
                   </button>
@@ -217,6 +220,15 @@ const rejectButtonStyle: React.CSSProperties = {
   backgroundColor: '#dc3545',
   color: 'white',
   border: 'none',
+  borderRadius: '4px',
+  cursor: 'pointer',
+};
+
+const profileButtonStyle: React.CSSProperties = {
+  padding: '0.5rem 1rem',
+  backgroundColor: 'transparent',
+  color: 'var(--primary)',
+  border: '1px solid var(--primary)',
   borderRadius: '4px',
   cursor: 'pointer',
 };

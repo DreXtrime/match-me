@@ -29,7 +29,7 @@ export const DashboardPage: React.FC = () => {
   if (!profile) {
     return (
       <div style={containerStyle}>
-        <div style={messageBoxStyle}>
+        <div className="mobile-compact-pad" style={messageBoxStyle}>
           <h2>Welcome to Match-Me! 👋</h2>
           <p>First, let's complete your profile to get started.</p>
           <button onClick={() => navigate('/complete-profile')} style={buttonStyle}>
@@ -43,13 +43,13 @@ export const DashboardPage: React.FC = () => {
   return (
     <div style={containerStyle}>
       <div style={contentStyle}>
-        <div style={welcomeBoxStyle}>
+        <div className="mobile-compact-pad" style={welcomeBoxStyle}>
           <h2>Welcome, {profile.first_name || 'there'}! 👋</h2>
           <p>You're all set up and ready to meet amazing people.</p>
         </div>
 
         <div style={gridStyle}>
-          <div style={cardStyle}>
+          <div className="mobile-compact-pad" style={cardStyle}>
             <h3>🔍 Discover Matches</h3>
             <p>Browse and connect with people who share your interests.</p>
             <button onClick={() => navigate('/recommendations')} style={buttonStyle}>

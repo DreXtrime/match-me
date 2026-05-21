@@ -254,9 +254,81 @@ label {
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 @media (max-width: 768px) {
   body {
     font-size: 14px;
+  }
+
+  /* Prevent iOS auto-zoom when focusing inputs */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Touch-friendly minimum tap targets */
+  button {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Remove the blue tap-flash on iOS/Android */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ============================================================================
+ * Mobile-responsive utility classes
+ * Apply via className alongside inline styles; only activate below 768px.
+ * ========================================================================== */
+@media (max-width: 768px) {
+  /* Card spans full viewport — no margins, no rounded corners (chat-style) */
+  .mobile-edge-card {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    height: calc(100vh - 60px) !important;
+    margin: 0 !important;
+  }
+
+  /* Remove all padding on mobile (use for containers wrapping edge-to-edge cards) */
+  .mobile-no-pad {
+    padding: 0 !important;
+  }
+
+  /* Stack a horizontal flex row into a vertical column */
+  .mobile-stack {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Make every button inside this container grow to share width equally */
+  .mobile-grow-buttons > button {
+    flex: 1 !important;
+    width: 100%;
+  }
+
+  /* Collapse heavy 2-3rem padding to a single rem */
+  .mobile-compact-pad {
+    padding: 1rem !important;
+  }
+
+  /* Remove only horizontal padding (useful for full-bleed sections) */
+  .mobile-no-pad-x {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Shorter hero image on small screens */
+  .mobile-shorter-image {
+    height: 60vw !important;
+    max-height: 380px !important;
   }
 }
 
