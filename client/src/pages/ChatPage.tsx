@@ -163,9 +163,13 @@ export const ChatPage: React.FC = () => {
   return (
     <div className="mobile-no-pad" style={containerStyle}>
       <div className="mobile-edge-card" style={chatBoxStyle}>
-        <div style={headerStyle}>
-          <button onClick={() => navigate('/chats')} style={backButtonStyle}>← Back</button>
-          <div style={headerContentStyle}>
+        <div className="mobile-compact-pad" style={headerStyle}>
+          <div style={headerNameWrapStyle}>
+            {otherUser?.profilePicture ? (
+              <img src={otherUser.profilePicture} alt={otherUser.name} style={headerAvatarStyle} />
+            ) : (
+              <div style={headerAvatarPlaceholderStyle}>{otherUser?.name?.charAt(0) ?? '?'}</div>
+            )}
             <div>
               <h2 style={headerTitleStyle}>{otherUser?.name || 'Chat'}</h2>
               <p style={onlineStatusStyle}>
@@ -174,6 +178,7 @@ export const ChatPage: React.FC = () => {
               </p>
             </div>
           </div>
+          <button onClick={() => navigate('/chats')} style={backButtonStyle} aria-label="Back to chats">←</button>
         </div>
 
         {error && <div style={errorStyle}>{error}</div>}
@@ -203,7 +208,7 @@ export const ChatPage: React.FC = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSendMessage} style={formStyle}>
+        <form onSubmit={handleSendMessage} className="mobile-compact-pad" style={formStyle}>
           <input
             type="text"
             value={newMessage}
@@ -259,14 +264,21 @@ const chatBoxStyle: React.CSSProperties = {
 };
 
 const backButtonStyle: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
+  background: 'rgba(124, 152, 255, 0.12)',
+  border: '1px solid rgba(124, 152, 255, 0.25)',
   color: 'var(--primary)',
-  fontSize: '0.85rem',
+  fontSize: '1.1rem',
   cursor: 'pointer',
-  padding: '0',
-  marginRight: '1rem',
-  transition: 'color 0.2s ease',
+  padding: 0,
+  width: '36px',
+  height: '36px',
+  minHeight: '36px',
+  borderRadius: '50%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+  transition: 'all 0.2s ease',
 };
 
 const headerStyle: React.CSSProperties = {
@@ -275,13 +287,8 @@ const headerStyle: React.CSSProperties = {
   backgroundColor: 'linear-gradient(135deg, rgba(124, 152, 255, 0.1), rgba(164, 89, 255, 0.05))',
   display: 'flex',
   alignItems: 'center',
-};
-
-const headerContentStyle: React.CSSProperties = {
-  flex: 1,
-  display: 'flex',
-  alignItems: 'center',
   justifyContent: 'space-between',
+  gap: '0.75rem',
 };
 
 const headerTitleStyle: React.CSSProperties = {
@@ -311,10 +318,42 @@ const onlineDotStyle = (isOnline: boolean): React.CSSProperties => ({
 const messagesContainerStyle: React.CSSProperties = {
   flex: 1,
   overflowY: 'auto',
-  padding: '1.5rem',
+  padding: '1rem',
   display: 'flex',
   flexDirection: 'column',
+  justifyContent: 'flex-end',
   gap: '0.75rem',
+  minHeight: 0,
+};
+
+const headerNameWrapStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.75rem',
+};
+
+const headerAvatarStyle: React.CSSProperties = {
+  width: '40px',
+  height: '40px',
+  borderRadius: '50%',
+  objectFit: 'cover',
+  border: '2px solid var(--primary)',
+  flexShrink: 0,
+};
+
+const headerAvatarPlaceholderStyle: React.CSSProperties = {
+  width: '40px',
+  height: '40px',
+  borderRadius: '50%',
+  backgroundColor: 'var(--primary-soft)',
+  color: 'var(--primary)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '1.1rem',
+  fontWeight: 700,
+  border: '2px solid var(--primary)',
+  flexShrink: 0,
 };
 
 const emptyStateStyle: React.CSSProperties = {

@@ -109,7 +109,7 @@ public class WebSocketEventHandler {
             userRepository.save(user);
         });
 
-        socketIOServer.getBroadcastOperations().sendEvent("user-offline", userId.toString());
+        broadcastStatusToConnections(userId, "user-offline");
         log.info("User {} marked offline after grace period", userId);
     }
 
