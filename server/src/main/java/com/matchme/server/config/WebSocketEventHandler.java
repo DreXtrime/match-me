@@ -6,6 +6,7 @@ import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.OnConnect;
 import com.corundumstudio.socketio.annotation.OnDisconnect;
 import com.corundumstudio.socketio.annotation.OnEvent;
+import com.matchme.server.repository.ConnectionRepository;
 import com.matchme.server.repository.UserRepository;
 import com.matchme.server.security.JwtUtil;
 import com.matchme.server.service.UserSessionStore;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +32,7 @@ public class WebSocketEventHandler {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final UserSessionStore userSessionStore;
+    private final ConnectionRepository connectionRepository;
 
     private static final long OFFLINE_GRACE_SECONDS = 300;
     private final ScheduledExecutorService offlineScheduler = Executors.newScheduledThreadPool(2);
@@ -65,8 +68,17 @@ public class WebSocketEventHandler {
             userRepository.save(user);
         });
 
-        socketIOServer.getBroadcastOperations().sendEvent("user-online", userId.toString());
+        broadcastStatusToConnections(userId, "user-online");
         log.info("User {} connected via WebSocket", userId);
+    }
+
+    private void broadcastStatusToConnections(UUID userId, String event) {
+        List<UUID> connectedUserIds = connectionRepository.findPartnerIdsByStatuses(
+                userId, List.of("accepted")
+        );
+        for (UUID connectedId : connectedUserIds) {
+            forwardToUser(connectedId, event, userId.toString());
+        }
     }
 
     @OnDisconnect
