@@ -38,6 +38,7 @@ export const WebSocketProvider: React.FC<{ isAuthenticated: boolean; children: R
     const url = import.meta.env.VITE_SOCKETIO_URL ?? 'http://localhost:3001';
     const s = io(url, {
       query: { token, userId },
+      transports: ['websocket'],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
