@@ -35,7 +35,7 @@ export const WebSocketProvider: React.FC<{ isAuthenticated: boolean; children: R
     const userId = localStorage.getItem('userId');
     if (!token || !userId) return;
 
-    const url = import.meta.env.VITE_SOCKETIO_URL ?? 'http://localhost:3001';
+    const url = import.meta.env.VITE_SOCKETIO_URL || 'http://localhost:3001';
     const s = io(url, {
       query: { token, userId },
       reconnection: true,
