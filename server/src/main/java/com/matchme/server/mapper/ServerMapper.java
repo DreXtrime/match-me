@@ -52,7 +52,11 @@ public interface ServerMapper {
     @Mapping(target = "isOnline", expression = "java(user.isOnline())")
     UserResponse toUserResponse(User user, String name, String profilePicture);
 
+    // Bean-level IGNORE preserves unset fields, but these two are user-clearable from the UI
+    // (empty text input → null in the request), so they need SET_TO_NULL to override.
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "profilePictureUrl", source = "profilePictureUrl", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
+    @Mapping(target = "aboutMe", source = "aboutMe", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
     void updateProfileFromRequest(UpdateProfileRequest request, @MappingTarget Profile profile);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
