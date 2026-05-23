@@ -107,7 +107,7 @@ export const CompleteProfilePage: React.FC = () => {
 
           <div style={formGroupStyle}>
             <label>About Me</label>
-            <textarea value={aboutMe} onChange={e => setAboutMe(e.target.value)} placeholder="Tell us about yourself..." style={{ ...inputStyle, minHeight: '100px', fontFamily: 'inherit' }} />
+            <textarea value={aboutMe} onChange={e => setAboutMe(e.target.value)} placeholder="Tell us about yourself..." style={{ ...inputStyle, minHeight: '100px', fontFamily: 'inherit', resize: 'vertical' }} />
           </div>
 
           <div style={formGroupStyle}>
