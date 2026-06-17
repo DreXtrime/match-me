@@ -1,6 +1,10 @@
 # Match-Me
 
-A recommendation platform that connects users based on multiple datapoints.
+A recommendation platform that connects users based on multiple datapoints. Implements a realtime chat, status updates, distance filtering and more. Features a responsive design for desktop and mobile devices.
+
+![Screenshot](./assets/screenshots/screenshot_1.png)
+
+---
 
 ## Tech Stack
 
@@ -47,15 +51,7 @@ mvnw.cmd spring-boot:run
 
 Runs on **http://localhost:3000**. Tables are created automatically on startup.
 
-> If port 3000 is already in use:
-> ```bash
-> # Mac/Linux
-> PORT=9090 ./mvnw spring-boot:run
-> # Windows PowerShell
-> $env:PORT=9090; mvnw.cmd spring-boot:run
-> ```
-> Then update `VITE_API_URL` in `client/.env` to match.
-
+---
 ### 2. Start the frontend
 
 ```bash
@@ -128,27 +124,27 @@ Then fill in `DATABASE_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_DRIVER` in `s
 
 Copy `.env.example` to `.env` in the `server/` folder.
 
-| Variable | Default | Description |
-|---|---|---|
-| `PORT` | `3000` | HTTP server port |
-| `SOCKETIO_PORT` | `3001` | Port for the Socket.IO server |
-| `JWT_SECRET` | (dev default) | Secret for signing JWTs — change in production |
-| `JWT_EXPIRATION` | `86400000` | Token lifetime in ms (24 h) |
-| `DDL_AUTO` | `create-drop` | wipes and recreates database on launch, set to `update` to keep data between restarts |
-| `SHOW_SQL` | `false` | Log SQL queries in console |
-| `SEED_DATABASE` | `false` | Populate DB with mock users on startup |
-| `SEED_USER_COUNT` | `100` | Number of users to seed |
-| `DATABASE_URL` | `jdbc:postgreql://localhost:5433/matchme` | Database connection url |
-| `DB_USERNAME` | `postgres` | Database username |
-| `DB_PASSWORD` | `postgres` | Database password |
+| Variable           | Default                                   | Description                                                                           |
+|--------------------|-------------------------------------------|---------------------------------------------------------------------------------------|
+| `PORT`             | `3000`                                    | HTTP server port                                                                      |
+| `SOCKETIO_PORT`    | `3001`                                    | Port for the Socket.IO server                                                         |
+| `JWT_SECRET`       | (dev default)                             | Secret for signing JWTs — change in production                                        |
+| `JWT_EXPIRATION`   | `86400000`                                | Token lifetime in ms (24 h)                                                           |
+| `DDL_AUTO`         | `create-drop`                             | wipes and recreates database on launch, set to `update` to keep data between restarts |
+| `SHOW_SQL_QUERIES` | `false`                                   | Log SQL queries in console                                                            |
+| `SEED_DATABASE`    | `false`                                   | Populate DB with mock users on startup                                                |
+| `SEED_USER_COUNT`  | `100`                                     | Number of users to seed                                                               |
+| `DATABASE_URL`     | `jdbc:postgreql://localhost:5433/matchme` | Database connection url                                                               |
+| `DB_USERNAME`      | `postgres`                                | Database username                                                                     |
+| `DB_PASSWORD`      | `postgres`                                | Database password                                                                     |
 
 ## Environment Variables (Frontend)
 
 Copy `.env.example` to `.env` in the `client/` folder.
 
-| Variable | Default | Description |
-|---|---|---|
-| `VITE_API_URL` | `http://localhost:3000` | URL to the backend API |
+| Variable            | Default                 | Description                 |
+|---------------------|-------------------------|-----------------------------|
+| `VITE_API_URL`      | `http://localhost:3000` | URL to the backend API      |
 | `VITE_SOCKETIO_URL` | `http://localhost:3001` | URL to the backend SocketIO |
 
 ## API

@@ -64,7 +64,7 @@ Copy `.env.example` to `.env` in the `server/` folder. For local development wit
 | `JWT_SECRET` | (dev default) | Secret for signing JWTs — change in production |
 | `JWT_EXPIRATION` | `86400000` | Token lifetime in ms (24 h) |
 | `DDL_AUTO` | `create-drop` | Hibernate schema mode |
-| `SHOW_SQL` | `false` | Log SQL queries |
+| `SHOW_SQL_QUERIES` | `false` | Log SQL queries |
 | `SEED_DATABASE` | `false` | Populate DB with mock users on startup |
 | `SEED_USER_COUNT` | `100` | Number of users to seed |
 | `SOCKETIO_PORT` | `3001` | Port for the Socket.IO server |
