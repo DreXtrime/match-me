@@ -150,3 +150,9 @@ Copy `.env.example` to `.env` in the `client/` folder.
 ## API
 
 See `API.md` for full endpoint documentation.
+
+## Credits
+
+Andreas Taavi Talu
+Tauri Metsis
+Tanel Erik Neitov
