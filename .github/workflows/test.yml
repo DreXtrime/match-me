@@ -20,7 +20,10 @@ jobs:
           distribution: 'temurin'
 
       - name: Run tests
-        run: ./server/mvnw test
+        working-directory: server
+        run: |
+          chmod +x mvnw
+          ./mvnw test
         env:
           JWT_SECRET: testsecretthatisjustenoughcharacterslong
           JWT_EXPIRATION: 86400000
