@@ -1,2 +1,2 @@
-/mvnw text eol=lf
-*.cmd text eol=crlf
+*.ts linguist-vendored
+*.tsx linguist-vendored
