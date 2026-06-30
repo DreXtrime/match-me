@@ -153,6 +153,6 @@ See `API.md` for full endpoint documentation.
 
 ## Credits
 
-Andreas Taavi Talu
-Tauri Metsis
+Andreas Taavi Talu  
+Tauri Metsis  
 Tanel Erik Neitov
