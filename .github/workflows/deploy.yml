@@ -1,0 +1,62 @@
+name: Deploy Demo Frontend
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'client/**'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Build demo
+        working-directory: client
+        run: npm run build -- --mode demo
+        env:
+          VITE_DEMO_MODE: true
+          VITE_API_URL: http://localhost:3000
+          VITE_SOCKETIO_URL: http://localhost:3001
+
+      - name: Upload built files
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-files
+          path: ./client/dist
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: demo
+      url: https://match-me-demo.tanelneitov.eu
+    steps:
+      - name: Download built files
+        uses: actions/download-artifact@v4
+        with:
+          name: demo-files
+          path: ./dist
+
+      - name: Connect to server over SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.HOST_SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy built site
+        run: |
+          rsync -vrm ./dist/ ${{ secrets.SSH_LOGIN_CREDS }}:~/domeenid/www.tanelneitov.eu/match-me-demo/
