@@ -3,8 +3,8 @@ name: Publish Backend Image
 on:
   push:
     branches: [ main ]
-#    paths:
-#      - 'server/**'
+    paths:
+      - 'server/**'
 
 jobs:
   test:

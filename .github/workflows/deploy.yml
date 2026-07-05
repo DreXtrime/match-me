@@ -3,8 +3,8 @@ name: Deploy Demo Frontend
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'client/**'
+#    paths:
+#      - 'client/**'
 
 jobs:
   build:
