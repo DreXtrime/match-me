@@ -1,8 +1,6 @@
 services:
-  postgres:
-    image: postgres:18
-    container_name: matchme-andreas-postgres
-    restart: unless-stopped
+  db:
+    image: postgres:16-alpine
     environment:
       POSTGRES_DB: matchme
       POSTGRES_USER: postgres
@@ -10,7 +8,34 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - matchme-andreas-postgres-data:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build: ./server
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    environment:
+      PORT: 3000
+      SOCKETIO_PORT: 3001
+      DATABASE_URL: jdbc:postgresql://db:5432/matchme
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DRIVER: org.postgresql.Driver
+      DDL_AUTO: update
+      JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
+      JWT_EXPIRATION: 86400000
+      SHOW_SQL_QUERIES: false
+      SEED_DATABASE: ${SEED_DATABASE:-false}
+      SEED_USER_COUNT: ${SEED_USER_COUNT:-100}
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
-  matchme-andreas-postgres-data:
+  postgres_data:
