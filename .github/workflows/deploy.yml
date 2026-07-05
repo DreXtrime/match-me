@@ -11,10 +11,10 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -31,7 +31,7 @@ jobs:
           VITE_SOCKETIO_URL: http://localhost:3001
 
       - name: Upload built files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: demo-files
           path: ./client/dist
@@ -45,7 +45,7 @@ jobs:
       url: https://match-me-demo.tanelneitov.eu
     steps:
       - name: Download built files
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: demo-files
           path: ./dist
