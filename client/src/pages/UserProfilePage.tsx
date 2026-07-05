@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { profileService } from '../services/api.js';
 import { useWebSocket } from '../hooks/useWebSocket.js';
-import type { Profile, BioData, User } from '../types/index.js';
+import type { Profile, BioData, User } from '../types';
 
 function formatEnum(value: string): string {
   return value

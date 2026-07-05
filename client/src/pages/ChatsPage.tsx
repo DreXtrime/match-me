@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { messageService, profileService } from '../services/api.js';
 import { useWebSocket } from '../hooks/useWebSocket.js';
-import type { Chat, User } from '../types/index.js';
+import type { Chat, User } from '../types';
 
 export const ChatsPage: React.FC = () => {
   const [chats, setChats] = useState<Array<Chat & { user?: User; lastMessage?: string }>>([]);

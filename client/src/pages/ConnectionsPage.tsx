@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { connectionService, profileService } from '../services/api.js';
 import { useWebSocket } from '../hooks/useWebSocket.js';
-import type { User } from '../types/index.js';
+import type { User } from '../types';
 
 type UserEntry = { id: string; user?: User };
 

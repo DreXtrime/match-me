@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { messageService, profileService } from '../services/api.js';
 import { useWebSocket } from '../hooks/useWebSocket.js';
-import type { Message, User } from '../types/index.js';
+import type { Message, User } from '../types';
 
 interface NewMessagePayload {
   id: string;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { recommendationService, profileService, connectionService } from '../services/api.js';
-import type { Profile, BioData } from '../types/index.js';
+import type { Profile, BioData } from '../types';
 
 export const RecommendationsPage: React.FC = () => {
   const [recommendations, setRecommendations] = useState<string[]>([]);
