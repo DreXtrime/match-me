@@ -4,12 +4,11 @@ import {
   DEMO_TOKEN,
   DEMO_PROFILE,
   DEMO_BIO,
-  MOCK_USERS,
   RECOMMENDATION_USER_IDS,
   mockState,
   getMockUser,
 } from './data.js';
-import type { Message } from '../types/index.js';
+import type { Message } from '../types';
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const url = (path: string) => `${BASE}${path}`;

@@ -1,4 +1,4 @@
-import type { User, Profile, BioData, Message } from '../types/index.js';
+import type { User, Profile, BioData, Message } from '../types';
 
 export const DEMO_USER_ID = 'demo-user-001';
 export const DEMO_TOKEN = 'demo-token-xyz';
