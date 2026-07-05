@@ -58,40 +58,25 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister }) => {
         <form onSubmit={handleSubmit} style={formStyle}>
           <div style={formGroupStyle}>
             <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={inputStyle}
-            />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
           </div>
           <div style={formGroupStyle}>
             <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={inputStyle}
-            />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={inputStyle} />
           </div>
           <div style={formGroupStyle}>
             <label>Confirm Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              style={inputStyle}
-            />
+            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required style={inputStyle} />
           </div>
           <button type="submit" disabled={loading} style={buttonStyle}>
             {loading ? 'Signing up...' : 'Sign Up'}
           </button>
         </form>
         <p>
-          Already have an account? <a href="/login" style={{ color: 'var(--primary)' }}>Login here</a>
+          Already have an account?{' '}
+          <a href="/login" style={{ color: 'var(--primary)' }}>
+            Login here
+          </a>
         </p>
       </div>
     </div>

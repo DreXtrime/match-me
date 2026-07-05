@@ -5,7 +5,10 @@ import { useWebSocket } from '../hooks/useWebSocket.js';
 import type { Profile, BioData, User } from '../types/index.js';
 
 function formatEnum(value: string): string {
-  return value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  return value
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export const UserProfilePage: React.FC = () => {
@@ -24,40 +27,54 @@ export const UserProfilePage: React.FC = () => {
       profileService.getUser(userId).then(setUser),
       profileService.getProfile(userId).then(setProfile),
       profileService.getUserBio(userId).then(setBio),
-    ]).catch(err => setError(err instanceof Error ? err.message : 'Failed to load profile'))
+    ])
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load profile'))
       .finally(() => setLoading(false));
   }, [userId]);
 
   useEffect(() => {
     const handleOnline = (id: string) => {
-      if (id === userId) setUser(prev => prev ? { ...prev, isOnline: true } : prev);
+      if (id === userId) setUser((prev) => (prev ? { ...prev, isOnline: true } : prev));
     };
     const handleOffline = (id: string) => {
-      if (id === userId) setUser(prev => prev ? { ...prev, isOnline: false } : prev);
+      if (id === userId) setUser((prev) => (prev ? { ...prev, isOnline: false } : prev));
     };
     on('user-online', handleOnline);
     on('user-offline', handleOffline);
-    return () => { off('user-online', handleOnline); off('user-offline', handleOffline); };
+    return () => {
+      off('user-online', handleOnline);
+      off('user-offline', handleOffline);
+    };
   }, [userId, on, off]);
 
-  if (loading) return <div style={containerStyle}><div style={loadingStyle}>Loading profile...</div></div>;
-  if (error) return <div style={containerStyle}><div style={errorStyle}>{error}</div></div>;
+  if (loading)
+    return (
+      <div style={containerStyle}>
+        <div style={loadingStyle}>Loading profile...</div>
+      </div>
+    );
+  if (error)
+    return (
+      <div style={containerStyle}>
+        <div style={errorStyle}>{error}</div>
+      </div>
+    );
 
   const picture = profile?.profilePicture;
 
   return (
     <div className="mobile-compact-pad" style={containerStyle}>
       <div className="mobile-compact-pad" style={cardStyle}>
-        <button onClick={() => navigate(-1)} style={backButtonStyle}>← Back</button>
+        <button onClick={() => navigate(-1)} style={backButtonStyle}>
+          ← Back
+        </button>
 
         <div className="mobile-stack" style={headerStyle}>
           <div style={avatarWrapStyle}>
             {picture ? (
               <img src={picture} alt={user?.name} style={avatarStyle} />
             ) : (
-              <div style={avatarPlaceholderStyle}>
-                {user?.name?.charAt(0) ?? '?'}
-              </div>
+              <div style={avatarPlaceholderStyle}>{user?.name?.charAt(0) ?? '?'}</div>
             )}
             <span style={onlineDotStyle(user?.isOnline ?? false)} title={user?.isOnline ? 'Online' : 'Offline'} />
           </div>
@@ -92,7 +109,11 @@ export const UserProfilePage: React.FC = () => {
           <section style={sectionStyle}>
             <h3 style={sectionTitleStyle}>Interests</h3>
             <div style={chipsStyle}>
-              {bio.interests.map(i => <span key={i} style={chipStyle}>{formatEnum(i)}</span>)}
+              {bio.interests.map((i) => (
+                <span key={i} style={chipStyle}>
+                  {formatEnum(i)}
+                </span>
+              ))}
             </div>
           </section>
         )}
@@ -101,7 +122,11 @@ export const UserProfilePage: React.FC = () => {
           <section style={sectionStyle}>
             <h3 style={sectionTitleStyle}>Friday night</h3>
             <div style={chipsStyle}>
-              {bio.fridayNightActivities.map(a => <span key={a} style={chipStyle}>{formatEnum(a)}</span>)}
+              {bio.fridayNightActivities.map((a) => (
+                <span key={a} style={chipStyle}>
+                  {formatEnum(a)}
+                </span>
+              ))}
             </div>
           </section>
         )}
@@ -110,7 +135,11 @@ export const UserProfilePage: React.FC = () => {
           <section style={sectionStyle}>
             <h3 style={sectionTitleStyle}>Music</h3>
             <div style={chipsStyle}>
-              {bio.musicGenres.map(g => <span key={g} style={chipStyle}>{formatEnum(g)}</span>)}
+              {bio.musicGenres.map((g) => (
+                <span key={g} style={chipStyle}>
+                  {formatEnum(g)}
+                </span>
+              ))}
             </div>
           </section>
         )}

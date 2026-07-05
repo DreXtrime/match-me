@@ -19,14 +19,10 @@ export const ChatsPage: React.FC = () => {
     const handleNewMessage = () => loadChats();
     const handleUnreadUpdate = () => loadChats();
     const handleUserOnline = (userId: string) => {
-      setChats(prev => prev.map(chat =>
-        chat.user?.id === userId ? { ...chat, user: { ...chat.user!, isOnline: true } } : chat
-      ));
+      setChats((prev) => prev.map((chat) => (chat.user?.id === userId ? { ...chat, user: { ...chat.user!, isOnline: true } } : chat)));
     };
     const handleUserOffline = (userId: string) => {
-      setChats(prev => prev.map(chat =>
-        chat.user?.id === userId ? { ...chat, user: { ...chat.user!, isOnline: false } } : chat
-      ));
+      setChats((prev) => prev.map((chat) => (chat.user?.id === userId ? { ...chat, user: { ...chat.user!, isOnline: false } } : chat)));
     };
 
     on('new-message', handleNewMessage);
@@ -46,7 +42,7 @@ export const ChatsPage: React.FC = () => {
     try {
       setLoading(true);
       const chatsData = await messageService.getChats();
-      
+
       const chatsWithInfo = await Promise.all(
         chatsData.map(async (chat) => {
           try {
@@ -105,38 +101,22 @@ export const ChatsPage: React.FC = () => {
         ) : (
           <div style={chatsListStyle}>
             {chats.map((chat) => (
-              <div
-                key={chat.id}
-                onClick={() => navigate(`/chat/${chat.id}`)}
-                style={chatItemStyle}
-              >
+              <div key={chat.id} onClick={() => navigate(`/chat/${chat.id}`)} style={chatItemStyle}>
                 <div style={chatAvatarStyle}>
                   {chat.user?.profilePicture ? (
-                    <img
-                      src={chat.user.profilePicture}
-                      alt={chat.user.name}
-                      style={avatarImageStyle}
-                    />
+                    <img src={chat.user.profilePicture} alt={chat.user.name} style={avatarImageStyle} />
                   ) : (
-                    <div style={avatarPlaceholderStyle}>
-                      {chat.user?.name?.charAt(0) || '?'}
-                    </div>
+                    <div style={avatarPlaceholderStyle}>{chat.user?.name?.charAt(0) || '?'}</div>
                   )}
                   {chat.user?.isOnline && <div style={onlineBadgeStyle} />}
                 </div>
 
                 <div style={chatInfoStyle}>
                   <div style={chatHeaderStyle}>
-                    <h3 style={chatNameStyle}>
-                      {chat.user?.name || `User ${chat.id.substring(0, 8)}`}
-                    </h3>
-                    <span style={timeStyle}>
-                      {formatTime(new Date(chat.lastMessageTime))}
-                    </span>
+                    <h3 style={chatNameStyle}>{chat.user?.name || `User ${chat.id.substring(0, 8)}`}</h3>
+                    <span style={timeStyle}>{formatTime(new Date(chat.lastMessageTime))}</span>
                   </div>
-                  <p style={statusStyle}>
-                    {chat.user?.isOnline ? '🟢 Online' : '🔘 Offline'}
-                  </p>
+                  <p style={statusStyle}>{chat.user?.isOnline ? '🟢 Online' : '🔘 Offline'}</p>
                 </div>
 
                 <div style={arrowStyle}>→</div>
@@ -160,7 +140,7 @@ function formatTime(date: Date): string {
   if (diffMins < 60) return `${diffMins}m`;
   if (diffHours < 24) return `${diffHours}h`;
   if (diffDays < 7) return `${diffDays}d`;
-  
+
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 

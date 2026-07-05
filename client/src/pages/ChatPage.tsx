@@ -73,11 +73,11 @@ export const ChatPage: React.FC = () => {
     };
 
     const handleUserOnline = (onlineUserId: string) => {
-      if (onlineUserId === userId) setOtherUser(prev => prev ? { ...prev, isOnline: true } : prev);
+      if (onlineUserId === userId) setOtherUser((prev) => (prev ? { ...prev, isOnline: true } : prev));
     };
 
     const handleUserOffline = (offlineUserId: string) => {
-      if (offlineUserId === userId) setOtherUser(prev => prev ? { ...prev, isOnline: false } : prev);
+      if (offlineUserId === userId) setOtherUser((prev) => (prev ? { ...prev, isOnline: false } : prev));
     };
 
     on('new-message', handleNewMessage);
@@ -148,17 +148,19 @@ export const ChatPage: React.FC = () => {
     }, 2000);
   };
 
-  if (loading) return (
-    <div style={containerStyle}>
-      <div style={loadingStyle}>Loading chat...</div>
-    </div>
-  );
+  if (loading)
+    return (
+      <div style={containerStyle}>
+        <div style={loadingStyle}>Loading chat...</div>
+      </div>
+    );
 
-  if (!userId) return (
-    <div style={containerStyle}>
-      <div style={errorBoxStyle}>Chat not found</div>
-    </div>
-  );
+  if (!userId)
+    return (
+      <div style={containerStyle}>
+        <div style={errorBoxStyle}>Chat not found</div>
+      </div>
+    );
 
   return (
     <div className="mobile-no-pad" style={containerStyle}>
@@ -178,7 +180,9 @@ export const ChatPage: React.FC = () => {
               </p>
             </div>
           </div>
-          <button onClick={() => navigate('/chats')} style={backButtonStyle} aria-label="Back to chats">←</button>
+          <button onClick={() => navigate('/chats')} style={backButtonStyle} aria-label="Back to chats">
+            ←
+          </button>
         </div>
 
         {error && <div style={errorStyle}>{error}</div>}
@@ -195,19 +199,19 @@ export const ChatPage: React.FC = () => {
                 <div key={msg.id} style={messageWrapperStyle(msg.sender_id === localUserId)}>
                   <div style={messageStyle(msg.sender_id === localUserId)}>
                     <p style={messageContentStyle}>{msg.content}</p>
-                    <small style={messageTimeStyle}>
-                      {formatMessageTime(msg.created_at)}
-                    </small>
+                    <small style={messageTimeStyle}>{formatMessageTime(msg.created_at)}</small>
                   </div>
                 </div>
               ))}
             </>
           )}
-          {isTyping && <div style={typingIndicatorStyle}>
-            <span style={typingDotStyle} />
-            <span style={typingDotStyle} />
-            <span style={typingDotStyle} />
-          </div>}
+          {isTyping && (
+            <div style={typingIndicatorStyle}>
+              <span style={typingDotStyle} />
+              <span style={typingDotStyle} />
+              <span style={typingDotStyle} />
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
 
@@ -376,9 +380,7 @@ const messageWrapperStyle = (isOwn: boolean): React.CSSProperties => ({
 });
 
 const messageStyle = (isOwn: boolean): React.CSSProperties => ({
-  background: isOwn 
-    ? 'linear-gradient(135deg, #7c98ff, #6483ff)' 
-    : 'var(--surface-light)',
+  background: isOwn ? 'linear-gradient(135deg, #7c98ff, #6483ff)' : 'var(--surface-light)',
   color: isOwn ? 'white' : 'var(--text)',
   padding: '0.875rem 1.125rem',
   borderRadius: isOwn ? '16px 4px 16px 16px' : '4px 16px 16px 16px',

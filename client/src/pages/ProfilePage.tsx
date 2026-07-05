@@ -2,7 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { profileService } from '../services/api.js';
 
 const INTERESTS = ['gaming', 'fitness', 'music', 'programming', 'art', 'reading', 'travel', 'food', 'movies', 'sports'];
-const FRIDAY_NIGHT_ACTIVITIES = ['bar_hopping', 'house_party', 'gaming', 'movies_at_home', 'restaurant', 'clubbing', 'board_games', 'concert', 'takeaway_and_chill', 'outdoor_bonfire'];
+const FRIDAY_NIGHT_ACTIVITIES = [
+  'bar_hopping',
+  'house_party',
+  'gaming',
+  'movies_at_home',
+  'restaurant',
+  'clubbing',
+  'board_games',
+  'concert',
+  'takeaway_and_chill',
+  'outdoor_bonfire',
+];
 const MUSIC_GENRES = ['rock', 'pop', 'hiphop', 'electronic', 'jazz', 'classical', 'metal', 'indie'];
 const RELATIONSHIP_GOALS = ['friendship', 'dating', 'networking', 'activity'];
 
@@ -32,10 +43,7 @@ export const ProfilePage: React.FC = () => {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const [profile, bio] = await Promise.all([
-        profileService.getOwnProfile(),
-        profileService.getMyBio().catch(() => null),
-      ]);
+      const [profile, bio] = await Promise.all([profileService.getOwnProfile(), profileService.getMyBio().catch(() => null)]);
 
       setFirstName(profile.firstName || '');
       setLastName(profile.lastName || '');
@@ -60,14 +68,21 @@ export const ProfilePage: React.FC = () => {
   };
 
   const toggle = (setList: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
-    setList(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
+    setList((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
   };
 
   const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) { setLocationMessage('Geolocation not supported.'); return; }
+    if (!navigator.geolocation) {
+      setLocationMessage('Geolocation not supported.');
+      return;
+    }
     setLocationMessage('Getting your location...');
     navigator.geolocation.getCurrentPosition(
-      pos => { setLatitude(pos.coords.latitude); setLongitude(pos.coords.longitude); setLocationMessage('Location updated.'); },
+      (pos) => {
+        setLatitude(pos.coords.latitude);
+        setLongitude(pos.coords.longitude);
+        setLocationMessage('Location updated.');
+      },
       () => setLocationMessage('Unable to retrieve location.'),
       { enableHighAccuracy: true }
     );
@@ -117,44 +132,64 @@ export const ProfilePage: React.FC = () => {
         {success && <div style={successStyle}>{success}</div>}
 
         <form onSubmit={handleSave} style={formStyle}>
-
           <div style={formGroupStyle}>
             <label>First Name *</label>
-            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} required style={inputStyle} />
+            <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required style={inputStyle} />
           </div>
 
           <div style={formGroupStyle}>
             <label>Last Name</label>
-            <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} style={inputStyle} />
+            <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} style={inputStyle} />
           </div>
 
           <div style={formGroupStyle}>
             <label>About Me</label>
-            <textarea value={aboutMe} onChange={e => setAboutMe(e.target.value)} placeholder="Tell us about yourself..." style={{ ...inputStyle, minHeight: '100px', fontFamily: 'inherit', resize: 'vertical' }} />
+            <textarea
+              value={aboutMe}
+              onChange={(e) => setAboutMe(e.target.value)}
+              placeholder="Tell us about yourself..."
+              style={{ ...inputStyle, minHeight: '100px', fontFamily: 'inherit', resize: 'vertical' }}
+            />
           </div>
 
           <div style={formGroupStyle}>
             <label>Profile Picture URL</label>
-            <input type="url" value={profilePictureUrl} onChange={e => setProfilePictureUrl(e.target.value)} placeholder="https://example.com/photo.jpg" style={inputStyle} />
+            <input
+              type="url"
+              value={profilePictureUrl}
+              onChange={(e) => setProfilePictureUrl(e.target.value)}
+              placeholder="https://example.com/photo.jpg"
+              style={inputStyle}
+            />
             {profilePictureUrl && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
-                <img src={profilePictureUrl} alt="Preview" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} onError={e => (e.currentTarget.style.display = 'none')} />
-                <button type="button" onClick={() => setProfilePictureUrl('')} style={{ ...secondaryButtonStyle, color: '#f76969', borderColor: '#f76969' }}>Remove</button>
+                <img
+                  src={profilePictureUrl}
+                  alt="Preview"
+                  style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }}
+                  onError={(e) => (e.currentTarget.style.display = 'none')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setProfilePictureUrl('')}
+                  style={{ ...secondaryButtonStyle, color: '#f76969', borderColor: '#f76969' }}
+                >
+                  Remove
+                </button>
               </div>
             )}
           </div>
 
           <div style={formGroupStyle}>
             <label>Age *</label>
-            <input type="number" min={18} max={120} value={age} onChange={e => setAge(Number(e.target.value))} required style={inputStyle} />
+            <input type="number" min={18} max={120} value={age} onChange={(e) => setAge(Number(e.target.value))} required style={inputStyle} />
           </div>
 
           <div style={formGroupStyle}>
             <label>What are you looking for? *</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {RELATIONSHIP_GOALS.map(goal => (
-                <button key={goal} type="button" onClick={() => setRelationshipGoal(goal)}
-                  style={chipStyleFor(relationshipGoal === goal)}>
+              {RELATIONSHIP_GOALS.map((goal) => (
+                <button key={goal} type="button" onClick={() => setRelationshipGoal(goal)} style={chipStyleFor(relationshipGoal === goal)}>
                   {goal}
                 </button>
               ))}
@@ -164,9 +199,13 @@ export const ProfilePage: React.FC = () => {
           <div style={formGroupStyle}>
             <label>Interests</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {INTERESTS.map(item => (
-                <button key={item} type="button" onClick={() => toggle(setSelectedInterests, item)}
-                  style={chipStyleFor(selectedInterests.includes(item))}>
+              {INTERESTS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => toggle(setSelectedInterests, item)}
+                  style={chipStyleFor(selectedInterests.includes(item))}
+                >
                   {item}
                 </button>
               ))}
@@ -176,9 +215,13 @@ export const ProfilePage: React.FC = () => {
           <div style={formGroupStyle}>
             <label>Friday Night Activities</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {FRIDAY_NIGHT_ACTIVITIES.map(item => (
-                <button key={item} type="button" onClick={() => toggle(setSelectedActivities, item)}
-                  style={chipStyleFor(selectedActivities.includes(item))}>
+              {FRIDAY_NIGHT_ACTIVITIES.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => toggle(setSelectedActivities, item)}
+                  style={chipStyleFor(selectedActivities.includes(item))}
+                >
                   {item.replace(/_/g, ' ')}
                 </button>
               ))}
@@ -188,9 +231,8 @@ export const ProfilePage: React.FC = () => {
           <div style={formGroupStyle}>
             <label>Favourite Music</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {MUSIC_GENRES.map(item => (
-                <button key={item} type="button" onClick={() => toggle(setSelectedMusic, item)}
-                  style={chipStyleFor(selectedMusic.includes(item))}>
+              {MUSIC_GENRES.map((item) => (
+                <button key={item} type="button" onClick={() => toggle(setSelectedMusic, item)} style={chipStyleFor(selectedMusic.includes(item))}>
                   {item}
                 </button>
               ))}
@@ -199,7 +241,14 @@ export const ProfilePage: React.FC = () => {
 
           <div style={formGroupStyle}>
             <label>Maximum match distance (km)</label>
-            <input type="number" min={5} max={500} value={maxDistanceKm} onChange={e => setMaxDistanceKm(Number(e.target.value))} style={inputStyle} />
+            <input
+              type="number"
+              min={5}
+              max={500}
+              value={maxDistanceKm}
+              onChange={(e) => setMaxDistanceKm(Number(e.target.value))}
+              style={inputStyle}
+            />
           </div>
 
           <div style={formGroupStyle}>
@@ -208,7 +257,11 @@ export const ProfilePage: React.FC = () => {
               Use My Current Location
             </button>
             {locationMessage && <small style={{ color: 'var(--muted)', marginTop: '0.25rem' }}>{locationMessage}</small>}
-            {latitude && <small style={{ color: '#44d190' }}>GPS: {latitude.toFixed(4)}, {longitude?.toFixed(4)}</small>}
+            {latitude && (
+              <small style={{ color: '#44d190' }}>
+                GPS: {latitude.toFixed(4)}, {longitude?.toFixed(4)}
+              </small>
+            )}
           </div>
 
           <button type="submit" disabled={saving} style={buttonStyle}>
@@ -287,4 +340,10 @@ const chipStyleFor = (selected: boolean): React.CSSProperties => ({
 });
 
 const errorStyle: React.CSSProperties = { backgroundColor: '#451616', color: '#f8d7da', padding: '1rem', borderRadius: '12px', marginBottom: '1rem' };
-const successStyle: React.CSSProperties = { backgroundColor: '#1d3524', color: '#b7f3d0', padding: '1rem', borderRadius: '12px', marginBottom: '1rem' };
+const successStyle: React.CSSProperties = {
+  backgroundColor: '#1d3524',
+  color: '#b7f3d0',
+  padding: '1rem',
+  borderRadius: '12px',
+  marginBottom: '1rem',
+};

@@ -31,14 +31,18 @@ function AppContent({ isAuthenticated, onLogin, onLogout }: AppContentProps) {
     try {
       const count = await messageService.getUnreadCount();
       setUnreadCount(count);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   const loadPendingCount = async () => {
     try {
       const ids = await connectionService.getPendingRequests();
       setPendingCount(ids.length);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   // Load counts on auth change
@@ -63,7 +67,7 @@ function AppContent({ isAuthenticated, onLogin, onLogout }: AppContentProps) {
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewRequest = () => setPendingCount(c => c + 1);
+    const handleNewRequest = () => setPendingCount((c) => c + 1);
     const handleUnread = () => loadUnreadCount();
 
     on('connection-request', handleNewRequest);
@@ -85,12 +89,7 @@ function AppContent({ isAuthenticated, onLogin, onLogout }: AppContentProps) {
 
   return (
     <>
-      <Navbar
-        isAuthenticated={isAuthenticated}
-        unreadCount={unreadCount}
-        pendingCount={pendingCount}
-        onLogout={handleLogout}
-      />
+      <Navbar isAuthenticated={isAuthenticated} unreadCount={unreadCount} pendingCount={pendingCount} onLogout={handleLogout} />
       <Routes>
         <Route path="/login" element={<LoginPage onLogin={onLogin} />} />
         <Route path="/register" element={<RegisterPage onRegister={onLogin} />} />
@@ -117,11 +116,7 @@ function App() {
   return (
     <WebSocketProvider isAuthenticated={isAuthenticated}>
       <Router>
-        <AppContent
-          isAuthenticated={isAuthenticated}
-          onLogin={handleLogin}
-          onLogout={handleLogout}
-        />
+        <AppContent isAuthenticated={isAuthenticated} onLogin={handleLogin} onLogout={handleLogout} />
       </Router>
     </WebSocketProvider>
   );

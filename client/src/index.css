@@ -29,8 +29,7 @@ body {
   min-height: 100vh;
   background:
     radial-gradient(circle at top left, rgba(124, 152, 255, 0.18), transparent 22%),
-    radial-gradient(circle at bottom right, rgba(164, 89, 255, 0.14), transparent 20%),
-    linear-gradient(180deg, #02060f 0%, #08101d 100%);
+    radial-gradient(circle at bottom right, rgba(164, 89, 255, 0.14), transparent 20%), linear-gradient(180deg, #02060f 0%, #08101d 100%);
   color: var(--text);
 }
 
@@ -39,7 +38,9 @@ body {
   flex: 1;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -61,7 +62,10 @@ button {
   color: white;
   cursor: pointer;
   box-shadow: 0 18px 40px rgba(79, 134, 255, 0.18);
-  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 button:hover {
@@ -87,7 +91,9 @@ textarea {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   padding: 0.95rem 1rem;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 input:focus,
@@ -162,7 +168,9 @@ label {
 
 /* Animations */
 @keyframes typing {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     opacity: 0.5;
     transform: translateY(0);
   }
@@ -217,7 +225,8 @@ label {
 }
 
 @keyframes heartBeat {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   14% {
@@ -229,7 +238,8 @@ label {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -301,7 +311,9 @@ html {
   }
 
   /* Prevent iOS auto-zoom when focusing inputs */
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     font-size: 16px !important;
   }
 

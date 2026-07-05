@@ -17,16 +17,16 @@ const WebSocketContext = createContext<WSContextValue>({
   off: () => {},
 });
 
-export const WebSocketProvider: React.FC<{ isAuthenticated: boolean; children: React.ReactNode }> = ({
-  isAuthenticated,
-  children,
-}) => {
+export const WebSocketProvider: React.FC<{ isAuthenticated: boolean; children: React.ReactNode }> = ({ isAuthenticated, children }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setSocket(prev => { prev?.disconnect(); return null; });
+      setSocket((prev) => {
+        prev?.disconnect();
+        return null;
+      });
       setIsConnected(false);
       return;
     }
@@ -55,23 +55,28 @@ export const WebSocketProvider: React.FC<{ isAuthenticated: boolean; children: R
     };
   }, [isAuthenticated]);
 
-  const emit = useCallback((event: string, data?: any) => {
-    socket?.emit(event, data);
-  }, [socket]);
-
-  const on = useCallback((event: string, cb: (...args: any[]) => void) => {
-    socket?.on(event, cb);
-  }, [socket]);
-
-  const off = useCallback((event: string, cb?: (...args: any[]) => void) => {
-    socket?.off(event, cb);
-  }, [socket]);
-
-  return (
-    <WebSocketContext.Provider value={{ socket, isConnected, emit, on, off }}>
-      {children}
-    </WebSocketContext.Provider>
+  const emit = useCallback(
+    (event: string, data?: any) => {
+      socket?.emit(event, data);
+    },
+    [socket]
   );
+
+  const on = useCallback(
+    (event: string, cb: (...args: any[]) => void) => {
+      socket?.on(event, cb);
+    },
+    [socket]
+  );
+
+  const off = useCallback(
+    (event: string, cb?: (...args: any[]) => void) => {
+      socket?.off(event, cb);
+    },
+    [socket]
+  );
+
+  return <WebSocketContext.Provider value={{ socket, isConnected, emit, on, off }}>{children}</WebSocketContext.Provider>;
 };
 
 export const useWebSocket = () => useContext(WebSocketContext);

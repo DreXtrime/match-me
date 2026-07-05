@@ -40,12 +40,8 @@ export const ConnectionsPage: React.FC = () => {
 
   useEffect(() => {
     const updateOnline = (userId: string, online: boolean) => {
-      setConnections(prev => prev.map(c =>
-        c.user?.id === userId ? { ...c, user: { ...c.user!, isOnline: online } } : c
-      ));
-      setPendingRequests(prev => prev.map(r =>
-        r.user?.id === userId ? { ...r, user: { ...r.user!, isOnline: online } } : r
-      ));
+      setConnections((prev) => prev.map((c) => (c.user?.id === userId ? { ...c, user: { ...c.user!, isOnline: online } } : c)));
+      setPendingRequests((prev) => prev.map((r) => (r.user?.id === userId ? { ...r, user: { ...r.user!, isOnline: online } } : r)));
     };
     const handleOnline = (id: string) => updateOnline(id, true);
     const handleOffline = (id: string) => updateOnline(id, false);

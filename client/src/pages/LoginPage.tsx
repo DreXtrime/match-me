@@ -46,30 +46,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         <form onSubmit={handleSubmit} style={formStyle}>
           <div style={formGroupStyle}>
             <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={inputStyle}
-            />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
           </div>
           <div style={formGroupStyle}>
             <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={inputStyle}
-            />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={inputStyle} />
           </div>
           <button type="submit" disabled={loading} style={buttonStyle}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
         <p>
-          Don't have an account? <a href="/register" style={{ color: 'var(--primary)' }}>Sign up here</a>
+          Don't have an account?{' '}
+          <a href="/register" style={{ color: 'var(--primary)' }}>
+            Sign up here
+          </a>
         </p>
       </div>
     </div>

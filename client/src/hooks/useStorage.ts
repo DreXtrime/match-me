@@ -39,10 +39,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
   return [storedValue.value, setValue, { isLoading: storedValue.isLoading, error: storedValue.error }];
 }
 
-export function useAsync<T>(
-  asyncFunction: () => Promise<T>,
-  immediate = true
-): { value: T | null; isLoading: boolean; error: string | null } {
+export function useAsync<T>(asyncFunction: () => Promise<T>, immediate = true): { value: T | null; isLoading: boolean; error: string | null } {
   const [state, setState] = useState<{ value: T | null; isLoading: boolean; error: string | null }>({
     value: null,
     isLoading: immediate,

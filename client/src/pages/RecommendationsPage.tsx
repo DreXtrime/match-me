@@ -43,10 +43,7 @@ export const RecommendationsPage: React.FC = () => {
 
   const loadProfile = async (userId: string) => {
     try {
-      const [profile, bio] = await Promise.all([
-        profileService.getProfile(userId),
-        profileService.getUserBio(userId).catch(() => null),
-      ]);
+      const [profile, bio] = await Promise.all([profileService.getProfile(userId), profileService.getUserBio(userId).catch(() => null)]);
       setCurrentProfile(profile);
       setCurrentBio(bio);
     } catch (err) {
@@ -156,20 +153,14 @@ export const RecommendationsPage: React.FC = () => {
           {/* Profile Image */}
           <div className="mobile-shorter-image" style={profileImageContainerStyle}>
             {currentProfile.profile_picture_url ? (
-              <img
-                src={currentProfile.profile_picture_url}
-                alt={currentProfile.first_name}
-                style={profileImageStyle}
-              />
+              <img src={currentProfile.profile_picture_url} alt={currentProfile.first_name} style={profileImageStyle} />
             ) : (
               <div style={imagePlaceholderStyle}>{currentProfile.first_name?.charAt(0) || '?'}</div>
             )}
             <div style={imageOverlayStyle}>
               <div style={nameTagStyle}>
                 <h2 style={nameStyle}>{currentProfile.first_name}</h2>
-                {currentProfile.location && (
-                  <p style={locationStyle}>📍 {currentProfile.location}</p>
-                )}
+                {currentProfile.location && <p style={locationStyle}>📍 {currentProfile.location}</p>}
               </div>
             </div>
           </div>
@@ -204,13 +195,19 @@ export const RecommendationsPage: React.FC = () => {
             {currentBio && (
               <div style={tagsContainerStyle}>
                 {currentBio.interests?.map((item) => (
-                  <span key={item} style={tagStyle}>{item}</span>
+                  <span key={item} style={tagStyle}>
+                    {item}
+                  </span>
                 ))}
                 {currentBio.musicGenres?.map((item) => (
-                  <span key={item} style={{ ...tagStyle, backgroundColor: 'rgba(164,89,255,0.15)', color: '#c880ff' }}>{item}</span>
+                  <span key={item} style={{ ...tagStyle, backgroundColor: 'rgba(164,89,255,0.15)', color: '#c880ff' }}>
+                    {item}
+                  </span>
                 ))}
                 {currentBio.fridayNightActivities?.map((item) => (
-                  <span key={item} style={{ ...tagStyle, backgroundColor: 'rgba(68,209,144,0.15)', color: '#44d190' }}>{item.replace(/_/g, ' ')}</span>
+                  <span key={item} style={{ ...tagStyle, backgroundColor: 'rgba(68,209,144,0.15)', color: '#44d190' }}>
+                    {item.replace(/_/g, ' ')}
+                  </span>
                 ))}
               </div>
             )}
@@ -218,26 +215,15 @@ export const RecommendationsPage: React.FC = () => {
 
           {/* Action Buttons */}
           <div style={actionsContainerStyle}>
-            <button
-              onClick={handlePass}
-              disabled={actionPending}
-              style={passButtonStyle}
-              title="Not interested"
-            >
+            <button onClick={handlePass} disabled={actionPending} style={passButtonStyle} title="Not interested">
               ✕
             </button>
-            <button
-              onClick={handleLike}
-              disabled={actionPending}
-              style={likeButtonStyle}
-              title="Connect"
-            >
+            <button onClick={handleLike} disabled={actionPending} style={likeButtonStyle} title="Connect">
               ❤️
             </button>
           </div>
         </div>
       </div>
-
     </div>
   );
 };
@@ -453,7 +439,6 @@ const likeButtonStyle: React.CSSProperties = {
   cursor: 'pointer',
   transition: 'all 0.3s ease',
 };
-
 
 const errorContainerStyle: React.CSSProperties = {
   textAlign: 'center',

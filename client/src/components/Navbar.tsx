@@ -31,12 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, unreadCount = 0
           <>
             <div className="nav-links" style={navLinksStyle}>
               <NavLink icon="🏠" label="Discover" onClick={() => navigate('/recommendations')} />
-              <NavLink 
-                icon="💬" 
-                label="Messages" 
-                badge={unreadCount}
-                onClick={() => navigate('/chats')} 
-              />
+              <NavLink icon="💬" label="Messages" badge={unreadCount} onClick={() => navigate('/chats')} />
               <NavLink icon="🤝" label="Connections" badge={pendingCount} onClick={() => navigate('/connections')} />
               <NavLink icon="👤" label="Profile" onClick={() => navigate('/profile')} />
               <button onClick={handleLogout} style={logoutButtonStyle}>
@@ -49,8 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, unreadCount = 0
               style={mobileMenuToggleStyle}
               aria-label="Open menu"
             >
-              ☰
-              {(unreadCount > 0 || pendingCount > 0) && <span style={notificationDotStyle} />}
+              ☰{(unreadCount > 0 || pendingCount > 0) && <span style={notificationDotStyle} />}
             </button>
           </>
         ) : (
@@ -68,15 +62,40 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, unreadCount = 0
       {/* Mobile Menu */}
       {mobileMenuOpen && isAuthenticated && (
         <div style={mobileMenuStyle}>
-          <NavLink icon="🏠" label="Discover" onClick={() => { navigate('/recommendations'); setMobileMenuOpen(false); }} />
-          <NavLink 
-            icon="💬" 
-            label="Messages" 
-            badge={unreadCount}
-            onClick={() => { navigate('/chats'); setMobileMenuOpen(false); }} 
+          <NavLink
+            icon="🏠"
+            label="Discover"
+            onClick={() => {
+              navigate('/recommendations');
+              setMobileMenuOpen(false);
+            }}
           />
-          <NavLink icon="🤝" label="Connections" badge={pendingCount} onClick={() => { navigate('/connections'); setMobileMenuOpen(false); }} />
-          <NavLink icon="👤" label="Profile" onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }} />
+          <NavLink
+            icon="💬"
+            label="Messages"
+            badge={unreadCount}
+            onClick={() => {
+              navigate('/chats');
+              setMobileMenuOpen(false);
+            }}
+          />
+          <NavLink
+            icon="🤝"
+            label="Connections"
+            badge={pendingCount}
+            onClick={() => {
+              navigate('/connections');
+              setMobileMenuOpen(false);
+            }}
+          />
+          <NavLink
+            icon="👤"
+            label="Profile"
+            onClick={() => {
+              navigate('/profile');
+              setMobileMenuOpen(false);
+            }}
+          />
           <button onClick={handleLogout} style={logoutButtonStyle}>
             Logout
           </button>
@@ -97,9 +116,7 @@ const NavLink: React.FC<NavLinkProps> = ({ icon, label, badge, onClick }) => (
   <button onClick={onClick} style={navLinkButtonStyle}>
     <span style={navIconStyle}>{icon}</span>
     <span>{label}</span>
-    {badge && badge > 0 && (
-      <span style={badgeStyle}>{badge}</span>
-    )}
+    {badge && badge > 0 && <span style={badgeStyle}>{badge}</span>}
   </button>
 );
 
