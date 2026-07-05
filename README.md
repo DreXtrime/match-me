@@ -3,7 +3,7 @@
 A people recommendation and messaging platform. Users are matched based on interests, music taste, relationship goals, location and then can connect and chat in real time.
 
 **[Try the live demo →](https://match-me-demo.tanelneitov.eu)**  
-(note: the demo does store any data.)
+(note: the demo does NOT store any data.)
 
 ![Screenshot](./assets/screenshots/screenshot_1.png)
 
