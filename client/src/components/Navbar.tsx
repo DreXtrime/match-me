@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {DemoBanner} from "./DemoBanner.tsx";
+import { DemoBanner } from './DemoBanner.tsx';
 
 interface NavbarProps {
   isAuthenticated: boolean;
