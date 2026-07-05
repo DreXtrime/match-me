@@ -31,6 +31,9 @@ export const WebSocketProvider: React.FC<{ isAuthenticated: boolean; children: R
       return;
     }
 
+    // don't connect in demo mode
+    if (import.meta.env.VITE_DEMO_MODE === 'true') return;
+
     const token = localStorage.getItem('token');
     const userId = localStorage.getItem('userId');
     if (!token || !userId) return;

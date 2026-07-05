@@ -14,6 +14,7 @@ import { ProfilePage } from './pages/ProfilePage.js';
 import { messageService, connectionService } from './services/api.js';
 import { WebSocketProvider } from './context/WebSocketContext.js';
 import { useWebSocket } from './hooks/useWebSocket.js';
+import { DemoBanner } from './components/DemoBanner.js';
 
 interface AppContentProps {
   isAuthenticated: boolean;
@@ -90,6 +91,7 @@ function AppContent({ isAuthenticated, onLogin, onLogout }: AppContentProps) {
   return (
     <>
       <Navbar isAuthenticated={isAuthenticated} unreadCount={unreadCount} pendingCount={pendingCount} onLogout={handleLogout} />
+      <DemoBanner />
       <Routes>
         <Route path="/login" element={<LoginPage onLogin={onLogin} />} />
         <Route path="/register" element={<RegisterPage onRegister={onLogin} />} />

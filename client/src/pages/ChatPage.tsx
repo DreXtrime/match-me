@@ -95,16 +95,45 @@ export const ChatPage: React.FC = () => {
     };
   }, [socket, userId, on, off]);
 
-  const loadMessages = async () => {
+  useEffect(() => {
+    if (import.meta.env.VITE_DEMO_MODE !== 'true' || !userId) return;
+
+    const handleMockMessage = (e: Event) => {
+      const { senderId } = (e as CustomEvent).detail;
+      if (senderId === userId) loadMessages(false);
+    };
+
+    const handleMockTyping = (e: Event) => {
+      const { senderId } = (e as CustomEvent).detail;
+      if (senderId === userId) setIsTyping(true);
+    };
+
+    const handleMockStopTyping = (e: Event) => {
+      const { senderId } = (e as CustomEvent).detail;
+      if (senderId === userId) setIsTyping(false);
+    };
+
+    window.addEventListener('mock:new-message', handleMockMessage);
+    window.addEventListener('mock:typing', handleMockTyping);
+    window.addEventListener('mock:stop-typing', handleMockStopTyping);
+
+    return () => {
+      window.removeEventListener('mock:new-message', handleMockMessage);
+      window.removeEventListener('mock:typing', handleMockTyping);
+      window.removeEventListener('mock:stop-typing', handleMockStopTyping);
+    };
+  }, [userId]);
+
+  const loadMessages = async (showLoading = true) => {
     try {
       if (!userId) return;
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const msgs = await messageService.getConversation(userId);
       setMessages(msgs);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load messages');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 

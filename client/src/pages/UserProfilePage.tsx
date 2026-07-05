@@ -49,7 +49,7 @@ export const UserProfilePage: React.FC = () => {
 
   if (loading)
     return (
-      <div style={containerStyle}>
+      <div className="mobile-compact-pad" style={containerStyle}>
         <div style={loadingStyle}>Loading profile...</div>
       </div>
     );
