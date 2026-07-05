@@ -23,6 +23,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "demo": "vite --mode demo",
     "preview": "vite preview"
   },
