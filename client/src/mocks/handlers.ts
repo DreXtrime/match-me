@@ -1,13 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import {
-  DEMO_USER_ID,
-  DEMO_TOKEN,
-  DEMO_PROFILE,
-  DEMO_BIO,
-  RECOMMENDATION_USER_IDS,
-  mockState,
-  getMockUser,
-} from './data.js';
+import { DEMO_USER_ID, DEMO_TOKEN, DEMO_PROFILE, DEMO_BIO, RECOMMENDATION_USER_IDS, mockState, getMockUser } from './data.js';
 import type { Message } from '../types';
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -100,7 +92,7 @@ export const handlers = [
   http.get(url('/recommendations'), async () => {
     await d();
     const available = RECOMMENDATION_USER_IDS.filter(
-      id => !mockState.dismissed.has(id) && !mockState.connections.has(id) && !mockState.pendingOutgoing.has(id)
+      (id) => !mockState.dismissed.has(id) && !mockState.connections.has(id) && !mockState.pendingOutgoing.has(id)
     );
     return HttpResponse.json({ recommendations: available });
   }),
@@ -133,14 +125,16 @@ export const handlers = [
       mockState.connections.add(id);
       const mock = getMockUser(id);
       if (mock && !mockState.conversations.has(id)) {
-        mockState.conversations.set(id, [{
-          id: `msg-auto-${id}`,
-          sender_id: id,
-          receiver_id: DEMO_USER_ID,
-          content: mock.chatScript[0],
-          is_read: false,
-          created_at: new Date().toISOString(),
-        }]);
+        mockState.conversations.set(id, [
+          {
+            id: `msg-auto-${id}`,
+            sender_id: id,
+            receiver_id: DEMO_USER_ID,
+            content: mock.chatScript[0],
+            is_read: false,
+            created_at: new Date().toISOString(),
+          },
+        ]);
       }
       window.dispatchEvent(new CustomEvent('mock:new-message', { detail: { senderId: id } }));
     }, 2000);
@@ -185,8 +179,8 @@ export const handlers = [
   http.get(url('/chats'), async () => {
     await d();
     const chats = [...mockState.connections]
-      .filter(id => mockState.conversations.has(id))
-      .map(id => {
+      .filter((id) => mockState.conversations.has(id))
+      .map((id) => {
         const msgs = mockState.conversations.get(id)!;
         const last = msgs[msgs.length - 1];
         return { id, lastMessageTime: last?.created_at ?? new Date().toISOString() };
@@ -200,7 +194,7 @@ export const handlers = [
     const msgs = mockState.conversations.get(params.userId as string) ?? [];
     // Simulate Spring Page response, newest first
     const reversed = [...msgs].reverse();
-    const camel = reversed.map(m => ({
+    const camel = reversed.map((m) => ({
       id: m.id,
       senderId: m.sender_id,
       receiverId: m.receiver_id,
@@ -215,7 +209,7 @@ export const handlers = [
     await d();
     const searchParams = new URL(request.url).searchParams;
     const receiverId = searchParams.get('receiverId') ?? '';
-    const body = await request.json() as { content: string };
+    const body = (await request.json()) as { content: string };
 
     const newMsg: Message = {
       id: `msg-${mockState.nextMsgId++}`,
@@ -247,7 +241,7 @@ export const handlers = [
     await d();
     let count = 0;
     for (const msgs of mockState.conversations.values()) {
-      count += msgs.filter(m => m.sender_id !== DEMO_USER_ID && !m.is_read).length;
+      count += msgs.filter((m) => m.sender_id !== DEMO_USER_ID && !m.is_read).length;
     }
     return HttpResponse.json({ unreadCount: count });
   }),
@@ -256,8 +250,11 @@ export const handlers = [
     await d();
     const msgId = params.messageId as string;
     for (const msgs of mockState.conversations.values()) {
-      const msg = msgs.find(m => m.id === msgId);
-      if (msg) { msg.is_read = true; break; }
+      const msg = msgs.find((m) => m.id === msgId);
+      if (msg) {
+        msg.is_read = true;
+        break;
+      }
     }
     return HttpResponse.json({ success: true });
   }),
@@ -281,19 +278,22 @@ function scheduleReply(userId: string) {
   }, 600);
 
   // Send the reply
-  setTimeout(() => {
-    window.dispatchEvent(new CustomEvent('mock:stop-typing', { detail: { senderId: userId } }));
-    const reply: Message = {
-      id: `msg-${mockState.nextMsgId++}`,
-      sender_id: userId,
-      receiver_id: DEMO_USER_ID,
-      content: replyText,
-      is_read: false,
-      created_at: new Date().toISOString(),
-    };
-    const conv = mockState.conversations.get(userId) ?? [];
-    conv.push(reply);
-    mockState.conversations.set(userId, conv);
-    window.dispatchEvent(new CustomEvent('mock:new-message', { detail: { senderId: userId } }));
-  }, 1500 + Math.random() * 1000);
+  setTimeout(
+    () => {
+      window.dispatchEvent(new CustomEvent('mock:stop-typing', { detail: { senderId: userId } }));
+      const reply: Message = {
+        id: `msg-${mockState.nextMsgId++}`,
+        sender_id: userId,
+        receiver_id: DEMO_USER_ID,
+        content: replyText,
+        is_read: false,
+        created_at: new Date().toISOString(),
+      };
+      const conv = mockState.conversations.get(userId) ?? [];
+      conv.push(reply);
+      mockState.conversations.set(userId, conv);
+      window.dispatchEvent(new CustomEvent('mock:new-message', { detail: { senderId: userId } }));
+    },
+    1500 + Math.random() * 1000
+  );
 }
