@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {DemoBanner} from "./DemoBanner.tsx";
 
 interface NavbarProps {
   isAuthenticated: boolean;
@@ -26,6 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, unreadCount = 0
           <span style={logoIconStyle}>💓</span>
           <span style={logoTextStyle}>Match-Me</span>
         </div>
+        <DemoBanner />
 
         {isAuthenticated ? (
           <>

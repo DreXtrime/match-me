@@ -1,28 +1,23 @@
 export function DemoBanner() {
-  if (import.meta.env.VITE_DEMO_MODE !== 'true') return null;
+    if (import.meta.env.VITE_DEMO_MODE !== 'true') return null;
 
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: '16px',
-        right: '16px',
-        zIndex: 9999,
-        backgroundColor: '#1a1a1a',
-        color: '#e5e5e5',
-        fontSize: '12px',
-        padding: '6px 12px',
-        borderRadius: '20px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-        userSelect: 'none',
-        pointerEvents: 'none',
-      }}
-    >
-      <span style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: '#f59e0b', display: 'inline-block' }} />
-      Demo — data resets on refresh
-    </div>
-  );
+    return (
+        <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            backgroundColor: 'rgba(245, 158, 11, 0.12)',
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+            color: '#f59e0b',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            padding: '4px 10px',
+            borderRadius: '20px',
+            userSelect: 'none',
+            whiteSpace: 'nowrap',
+        }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#f59e0b', display: 'inline-block', flexShrink: 0 }} />
+            Demo mode
+        </div>
+    );
 }
