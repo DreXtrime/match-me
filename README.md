@@ -1,6 +1,9 @@
 # Match-Me
 
-A recommendation platform that connects users based on multiple datapoints. Implements a realtime chat, status updates, distance filtering and more. Features a responsive design for desktop and mobile devices.
+A people recommendation and messaging platform. Users are matched based on interests, music taste, relationship goals, location and then can connect and chat in real time.
+
+**[Try the live demo →](https://match-me-demo.tanelneitov.eu)**  
+(note: the demo does store any data.)
 
 ![Screenshot](./assets/screenshots/screenshot_1.png)
 
@@ -8,148 +11,128 @@ A recommendation platform that connects users based on multiple datapoints. Impl
 
 ## Tech Stack
 
-**Backend**: Java 21, Spring Boot, H2 (dev) / PostgreSQL (prod)  
-**Frontend**: React, TypeScript, Vite  
-**Auth**: JWT + bcrypt  
-**Real-time**: Socket.IO
+| Layer            | Technology                   |
+|------------------|------------------------------|
+| Backend          | Java 21, Spring Boot         |
+| Database         | H2 (dev) / PostgreSQL (prod) |
+| Frontend         | React, TypeScript, Vite      |
+| Auth             | JWT + bcrypt                 |
+| Real-time        | Socket.IO                    |
+| CI/CD            | GitHub Actions               |
+| Containerization | Docker                       |
 
-## Notable Decisions
+---
 
-- Profile pictures: users can set a custom URL via `PUT /me/profile`. If none is set, the backend falls back to a Gravatar URL derived from the user's email. No image uploads or storage needed.
-- GPS location is requested from the browser via the Geolocation API. Coordinates are stored on the profile and used as a hard filter before scoring — only users within the chosen `maxDistanceKm` radius are recommended.
-- Real-time features (new messages, typing indicators, unread count updates) use Socket.IO. The client connects on login and disconnects on logout. No polling.
-- Dates are only shown under chat messages sent yesterday or earlier
+## Architecture & Design Decisions
 
-## Matching Algorithm
+**Matching algorithm** — candidates are scored across 5 dimensions: interests, Friday night activity, music genres, relationship goal, and age. Location acts as a hard filter before scoring — only users within the chosen radius are considered. The top 10 scoring matches are returned.
 
-Recommendations are scored across 5 data points: interests, preferred friday night activity, music genres, relationship goal, and age. Location acts as a hard filter before scoring. Highest scoring matches are returned first, up to a maximum of 10.
+**Real-time** — Socket.IO runs on a separate port (3001) from the REST API (3000). The client connects on login and disconnects on logout. Typing indicators, unread counts, and new messages are all pushed over the socket with no polling.
 
-## Prerequisites
+**Profile pictures** — users can provide a custom image URL. If none is set, the backend derives a Gravatar URL from the email. No file storage needed.
 
-- Java 21
-- Node.js (v18+) + npm
+**Location** — GPS coordinates are requested from the browser via the Geolocation API and stored on the profile. They are used only as a filter and never exposed directly to other users.
 
-> Maven is not required — the project includes a Maven wrapper (`mvnw`) that downloads it automatically.
+**Profile visibility** — user profiles are only accessible if there is an existing recommendation, pending request, or accepted connection between the two users. The API returns 404 for both "not found" and "not permitted" to avoid confirming a user's existence.
+
+**Demo mode** — the frontend supports a `demo` build mode powered by MSW (Mock Service Worker). All API calls are intercepted client-side with no backend required. Seeded mock users respond to messages with scripted replies. Deployed automatically to the demo domain on every push to `main`.
+
+---
 
 ## Running Locally
 
-The backend uses an **in-memory H2 database by default** — no database installation needed.
+### Prerequisites
+
+- Java 21
+- Node.js v18+ and npm
+
+> Maven is not required — the project includes a Maven wrapper (`mvnw`) that downloads it automatically.
 
 ### 1. Start the backend
 
 ```bash
 cd server
-chmod +x ./mvnw
-./mvnw spring-boot:run
+cp .env.example .env
 ```
 
-Windows:
 ```bash
-cd server
+# Mac/Linux
+chmod +x ./mvnw
+./mvnw spring-boot:run
+
+# Windows
 mvnw.cmd spring-boot:run
 ```
 
-Runs on **http://localhost:3000**. Tables are created automatically on startup.
+Runs on **http://localhost:3000**. Uses an in-memory H2 database by default — no database setup needed.
 
----
 ### 2. Start the frontend
 
 ```bash
 cd client
+cp .env.example .env   # Windows: copy .env.example .env
 npm install
 npm run dev
 ```
 
-Mac/Linux — copy the example env file if you don't have one yet:
-```bash
-cp .env.example .env
-```
-Windows:
-```bash
-copy .env.example .env
-```
-
 Runs on **http://localhost:5173**.
 
-The `.env` file should contain:
-```
-VITE_API_URL=http://localhost:3000
-VITE_SOCKETIO_URL=http://localhost:3001
+---
+
+## Docker
+
+Docker Compose starts the backend and a PostgreSQL database together:
+
+```bash
+docker compose up -d
 ```
 
-## Mock User Seeding
+Then start the frontend separately with `npm run dev` as above.
 
-Add these to `server/.env` before starting the backend:
+To seed the database with mock users, create a `.env` file in the project root:
 
 ```
 SEED_DATABASE=true
 SEED_USER_COUNT=200
 ```
 
-All seeded users have the password: `password`
+All seeded users have the password `password`.
 
-## Production Database (PostgreSQL)
+---
 
-<details>
-<summary>Docker (recommended)</summary>
+## Environment Variables
 
-Make sure Docker is installed
+### Backend (`server/.env`)
 
-```bash
-docker compose up -d
-```
+| Variable           | Default                 | Description                                      |
+|--------------------|-------------------------|--------------------------------------------------|
+| `PORT`             | `3000`                  | HTTP server port                                 |
+| `SOCKETIO_PORT`    | `3001`                  | Socket.IO server port                            |
+| `JWT_SECRET`       | (dev default)           | Secret for signing JWTs — change in production   |
+| `JWT_EXPIRATION`   | `86400000`              | Token lifetime in ms (24 h)                      |
+| `DDL_AUTO`         | `create-drop`           | Set to `update` to persist data between restarts |
+| `SHOW_SQL_QUERIES` | `false`                 | Log SQL queries to console                       |
+| `SEED_DATABASE`    | `false`                 | Seed the database with mock users on startup     |
+| `SEED_USER_COUNT`  | `100`                   | Number of users to seed                          |
+| `DATABASE_URL`     | `jdbc:h2:mem:matchmedb` | Database connection URL                          |
+| `DB_USERNAME`      | `sa`                    | Database username                                |
+| `DB_PASSWORD`      | _(empty)_               | Database password                                |
+| `DB_DRIVER`        | `org.h2.Driver`         | JDBC driver class                                |
 
-This starts a PostgreSQL instance on port **5433** with the credentials already set in `server/.env.example`.
+### Frontend (`client/.env`)
 
-</details>
+| Variable            | Default                 | Description          |
+|---------------------|-------------------------|----------------------|
+| `VITE_API_URL`      | `http://localhost:3000` | Backend API URL      |
+| `VITE_SOCKETIO_URL` | `http://localhost:3001` | Socket.IO server URL |
 
-<details>
-<summary>Manual</summary>
-
-Make sure PostgreSQL is installed and running, then create the database:
-```bash
-createdb matchme
-```
-
-If you don't have a PostgreSQL user yet:
-```bash
-sudo -u postgres createuser --superuser your_username
-```
-
-Then fill in `DATABASE_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_DRIVER` in `server/.env` before starting the backend.
-
-</details>
-
-## Environment Variables (Backend)
-
-Copy `.env.example` to `.env` in the `server/` folder.
-
-| Variable           | Default                                   | Description                                                                           |
-|--------------------|-------------------------------------------|---------------------------------------------------------------------------------------|
-| `PORT`             | `3000`                                    | HTTP server port                                                                      |
-| `SOCKETIO_PORT`    | `3001`                                    | Port for the Socket.IO server                                                         |
-| `JWT_SECRET`       | (dev default)                             | Secret for signing JWTs — change in production                                        |
-| `JWT_EXPIRATION`   | `86400000`                                | Token lifetime in ms (24 h)                                                           |
-| `DDL_AUTO`         | `create-drop`                             | wipes and recreates database on launch, set to `update` to keep data between restarts |
-| `SHOW_SQL_QUERIES` | `false`                                   | Log SQL queries in console                                                            |
-| `SEED_DATABASE`    | `false`                                   | Populate DB with mock users on startup                                                |
-| `SEED_USER_COUNT`  | `100`                                     | Number of users to seed                                                               |
-| `DATABASE_URL`     | `jdbc:postgreql://localhost:5433/matchme` | Database connection url                                                               |
-| `DB_USERNAME`      | `postgres`                                | Database username                                                                     |
-| `DB_PASSWORD`      | `postgres`                                | Database password                                                                     |
-
-## Environment Variables (Frontend)
-
-Copy `.env.example` to `.env` in the `client/` folder.
-
-| Variable            | Default                 | Description                 |
-|---------------------|-------------------------|-----------------------------|
-| `VITE_API_URL`      | `http://localhost:3000` | URL to the backend API      |
-| `VITE_SOCKETIO_URL` | `http://localhost:3001` | URL to the backend SocketIO |
+---
 
 ## API
 
-See `API.md` for full endpoint documentation.
+See [API.md](./API.md) for full endpoint documentation.
+
+---
 
 ## Credits
 
