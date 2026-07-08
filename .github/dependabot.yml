@@ -7,7 +7,7 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 5
     assignees:
-      - drextrime
+      - DreXtrime
 
   # Backend dependencies
   - package-ecosystem: "maven"
@@ -16,7 +16,7 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 5
     assignees:
-      - drextrime
+      - DreXtrime
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
@@ -25,4 +25,4 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 5
     assignees:
-      - drextrime
+      - DreXtrime
