@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { messageService, profileService } from '../services/api.js';
 import { useWebSocket } from '../hooks/useWebSocket.js';
 import type { Message, User } from '../types';
+import { Btn } from '../components/Btn.tsx';
+import { LoadingScreen } from '../components/Loadingscreen.tsx';
 
 interface NewMessagePayload {
   id: string;
@@ -155,8 +157,6 @@ export const ChatPage: React.FC = () => {
       const message = await messageService.sendMessage(userId, newMessage);
       setMessages((prev: Message[]) => [...prev, message]);
       setNewMessage('');
-
-      // Stop typing indicator
       emit('user-stopped-typing', { receiverId: userId });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send message');
@@ -165,86 +165,118 @@ export const ChatPage: React.FC = () => {
 
   const handleTyping = () => {
     if (!userId) return;
-
     emit('user-typing', { receiverId: userId });
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       emit('user-stopped-typing', { receiverId: userId });
     }, 2000);
   };
 
-  if (loading)
+  // ── Loading ───────────────────────────────────────────────────────────────
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (!userId) {
     return (
-      <div style={containerStyle}>
-        <div style={loadingStyle}>Loading chat...</div>
+      <div className="min-h-[calc(100dvh-60px)] flex items-center justify-center px-4">
+        <div className="border-2 border-red bg-red/10 text-red px-5 py-3 text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+          ✕ Chat not found
+        </div>
       </div>
     );
+  }
 
-  if (!userId)
-    return (
-      <div style={containerStyle}>
-        <div style={errorBoxStyle}>Chat not found</div>
-      </div>
-    );
+  // ── Main ─────────────────────────────────────────────────────────────────
 
+  // @ts-ignore
   return (
-    <div className="mobile-no-pad" style={containerStyle}>
-      <div className="mobile-edge-card" style={chatBoxStyle}>
-        <div className="mobile-compact-pad" style={headerStyle}>
-          <div style={headerNameWrapStyle}>
+    <div className="mobile-no-pad min-h-[calc(100dvh-60px)] flex justify-center items-center p-4">
+      <div className="mobile-edge-card w-full max-w-[700px] h-[80vh] flex flex-col border-2 border-border bg-panel">
+        {/* Header */}
+        <div className="mobile-compact-pad flex items-center justify-between gap-3 px-5 py-3 bg-surface border-b-2 border-border">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Avatar */}
             {otherUser?.profilePicture ? (
-              <img src={otherUser.profilePicture} alt={otherUser.name} style={headerAvatarStyle} />
+              <img src={otherUser.profilePicture} alt={otherUser.name} className="w-24 h-24 object-cover border border-border shrink-0" />
             ) : (
-              <div style={headerAvatarPlaceholderStyle}>{otherUser?.name?.charAt(0) ?? '?'}</div>
+              <div
+                className="w-24 h-24 border border-border flex items-center justify-center text-yellow font-black text-base shrink-0"
+                style={{ fontFamily: 'var(--font-ui)' }}
+              >
+                {otherUser?.name?.charAt(0) ?? '?'}
+              </div>
             )}
-            <div>
-              <h2 style={headerTitleStyle}>{otherUser?.name || 'Chat'}</h2>
-              <p style={onlineStatusStyle}>
-                <span style={onlineDotStyle(otherUser?.isOnline || false)} />
+            {/* Name + status */}
+            <div className="min-w-0">
+              <p className="text-text font-bold text-base truncate m-0" style={{ fontFamily: 'var(--font-ui)' }}>
+                {otherUser?.name || 'Chat'}
+              </p>
+              <p
+                className={`text-xs m-0 flex items-center gap-1.5 ${otherUser?.isOnline ? 'text-green' : 'text-muted'}`}
+                style={{ fontFamily: 'var(--font-ui)' }}
+              >
+                <span className={`inline-block w-2 h-2 ${otherUser?.isOnline ? 'bg-green' : 'bg-muted'}`} />
                 {otherUser?.isOnline ? 'Online now' : 'Offline'}
               </p>
             </div>
           </div>
-          <button onClick={() => navigate('/chats')} style={backButtonStyle} aria-label="Back to chats">
-            ←
-          </button>
+
+          {/* Back button */}
+          <Btn variant="chat" onClick={() => navigate('/chats')} aria-label="Back to chats">
+            ← Back
+          </Btn>
         </div>
 
-        {error && <div style={errorStyle}>{error}</div>}
+        {/* Inline error */}
+        {error && (
+          <div className="mx-4 mt-3 border border-red/30 bg-red/10 text-red px-4 py-2 text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+            ✕ {error}
+          </div>
+        )}
 
-        <div style={messagesContainerStyle}>
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-3 p-4 overscroll-contain">
           {messages.length === 0 ? (
-            <div style={emptyStateStyle}>
-              <p>No messages yet. Start the conversation! 💬</p>
+            <div className="flex items-center justify-center h-full text-muted text-sm text-center" style={{ fontFamily: 'var(--font-ui)' }}>
+              No messages yet. Start the conversation! 💬
             </div>
           ) : (
             <>
-              <div style={{ flex: 1, minHeight: 0 }} />
-              {messages.map((msg) => (
-                <div key={msg.id} style={messageWrapperStyle(msg.sender_id === localUserId)}>
-                  <div style={messageStyle(msg.sender_id === localUserId)}>
-                    <p style={messageContentStyle}>{msg.content}</p>
-                    <small style={messageTimeStyle}>{formatMessageTime(msg.created_at)}</small>
+              <div className="flex-1 min-h-0" />
+              {messages.map((msg) => {
+                const isOwn = msg.sender_id === localUserId;
+                return (
+                  <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[70%] px-4 py-3 break-words ${isOwn ? 'bg-yellow text-bg' : 'bg-surface border border-border text-text'}`}>
+                      <p className="m-0 text-sm leading-snug" style={{ fontFamily: 'var(--font-ui)' }}>
+                        {msg.content}
+                      </p>
+                      <small className="block mt-1 text-xs opacity-60" style={{ fontFamily: 'var(--font-ui)' }}>
+                        {formatMessageTime(msg.created_at)}
+                      </small>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </>
           )}
+
+          {/* Typing indicator */}
           {isTyping && (
-            <div style={typingIndicatorStyle}>
-              <span style={typingDotStyle} />
-              <span style={typingDotStyle} />
-              <span style={typingDotStyle} />
+            <div className="flex items-center gap-1 px-2 py-1">
+              {[0, 1, 2].map((i) => (
+                <span key={i} className="inline-block w-2 h-2 bg-yellow" style={{ animation: `typing 1.4s infinite ${i * 0.2}s` }} />
+              ))}
             </div>
           )}
+
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSendMessage} className="mobile-compact-pad" style={formStyle}>
+        {/* Input form */}
+        <form onSubmit={handleSendMessage} className="mobile-compact-pad flex gap-3 px-4 py-3 border-t-2 border-border bg-surface">
           <input
             type="text"
             value={newMessage}
@@ -253,11 +285,12 @@ export const ChatPage: React.FC = () => {
               handleTyping();
             }}
             placeholder="Type a message..."
-            style={inputStyle}
+            className="flex-1 px-4 py-2.5 bg-bg border border-border text-text text-sm placeholder:text-muted focus:outline-none focus:border-yellow transition-colors"
+            style={{ fontFamily: 'var(--font-ui)' }}
           />
-          <button type="submit" style={sendButtonStyle}>
-            ✈️
-          </button>
+          <Btn variant="chat" onClick={() => {}}>
+            Send️
+          </Btn>
         </form>
       </div>
     </div>
@@ -272,227 +305,3 @@ function formatMessageTime(dateStr: string): string {
   if (isToday) return time;
   return `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`;
 }
-
-const containerStyle: React.CSSProperties = {
-  minHeight: 'calc(100dvh - 60px)',
-  backgroundColor: 'var(--background)',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  padding: '1rem',
-};
-
-const loadingStyle: React.CSSProperties = {
-  color: 'var(--muted)',
-  fontSize: '1.1rem',
-};
-
-const chatBoxStyle: React.CSSProperties = {
-  backgroundColor: 'var(--surface)',
-  borderRadius: '24px',
-  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
-  width: '100%',
-  maxWidth: '700px',
-  height: '80vh',
-  display: 'flex',
-  flexDirection: 'column',
-  border: '1px solid var(--border)',
-};
-
-const backButtonStyle: React.CSSProperties = {
-  background: 'rgba(124, 152, 255, 0.12)',
-  border: '1px solid rgba(124, 152, 255, 0.25)',
-  color: 'var(--primary)',
-  fontSize: '1.4rem',
-  fontWeight: 700,
-  lineHeight: 1,
-  cursor: 'pointer',
-  padding: 0,
-  width: '36px',
-  height: '36px',
-  minHeight: '36px',
-  borderRadius: '50%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
-  transition: 'all 0.2s ease',
-};
-
-const headerStyle: React.CSSProperties = {
-  borderBottom: '1px solid var(--border)',
-  padding: '1.5rem',
-  backgroundColor: 'linear-gradient(135deg, rgba(124, 152, 255, 0.1), rgba(164, 89, 255, 0.05))',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: '0.75rem',
-};
-
-const headerTitleStyle: React.CSSProperties = {
-  margin: '0 0 0.25rem 0',
-  fontSize: '1.3rem',
-  fontWeight: 700,
-  color: 'var(--text)',
-};
-
-const onlineStatusStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: '0.85rem',
-  color: 'var(--muted)',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.5rem',
-};
-
-const onlineDotStyle = (isOnline: boolean): React.CSSProperties => ({
-  display: 'inline-block',
-  width: '8px',
-  height: '8px',
-  borderRadius: '50%',
-  backgroundColor: isOnline ? '#44d190' : '#9bb2d6',
-});
-
-const messagesContainerStyle: React.CSSProperties = {
-  flex: 1,
-  overflowY: 'auto',
-  padding: '1rem',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.75rem',
-  minHeight: 0,
-  overscrollBehavior: 'contain',
-};
-
-const headerNameWrapStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.75rem',
-};
-
-const headerAvatarStyle: React.CSSProperties = {
-  width: '40px',
-  height: '40px',
-  borderRadius: '50%',
-  objectFit: 'cover',
-  border: '2px solid var(--primary)',
-  flexShrink: 0,
-};
-
-const headerAvatarPlaceholderStyle: React.CSSProperties = {
-  width: '40px',
-  height: '40px',
-  borderRadius: '50%',
-  backgroundColor: 'var(--primary-soft)',
-  color: 'var(--primary)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '1.1rem',
-  fontWeight: 700,
-  border: '2px solid var(--primary)',
-  flexShrink: 0,
-};
-
-const emptyStateStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  height: '100%',
-  color: 'var(--muted)',
-  textAlign: 'center',
-};
-
-const messageWrapperStyle = (isOwn: boolean): React.CSSProperties => ({
-  display: 'flex',
-  justifyContent: isOwn ? 'flex-end' : 'flex-start',
-});
-
-const messageStyle = (isOwn: boolean): React.CSSProperties => ({
-  background: isOwn ? 'linear-gradient(135deg, #7c98ff, #6483ff)' : 'var(--surface-light)',
-  color: isOwn ? 'white' : 'var(--text)',
-  padding: '0.875rem 1.125rem',
-  borderRadius: isOwn ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
-  maxWidth: '70%',
-  wordWrap: 'break-word',
-  boxShadow: isOwn ? '0 2px 8px rgba(124, 152, 255, 0.2)' : 'none',
-});
-
-const messageContentStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: '0.95rem',
-  lineHeight: '1.4',
-};
-
-const messageTimeStyle: React.CSSProperties = {
-  opacity: 0.7,
-  fontSize: '0.75rem',
-  display: 'block',
-  marginTop: '0.25rem',
-};
-
-const typingIndicatorStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.25rem',
-  padding: '0.5rem',
-  color: 'var(--muted)',
-};
-
-const typingDotStyle: React.CSSProperties = {
-  display: 'inline-block',
-  width: '8px',
-  height: '8px',
-  borderRadius: '50%',
-  backgroundColor: 'var(--primary)',
-  animation: 'typing 1.4s infinite',
-};
-
-const formStyle: React.CSSProperties = {
-  display: 'flex',
-  gap: '0.75rem',
-  padding: '1.25rem',
-  borderTop: '1px solid var(--border)',
-  backgroundColor: 'var(--surface-light)',
-  borderBottomLeftRadius: '24px',
-  borderBottomRightRadius: '24px',
-};
-
-const inputStyle: React.CSSProperties = {
-  flex: 1,
-  padding: '0.875rem 1.125rem',
-  border: '1px solid var(--border)',
-  borderRadius: '20px',
-  fontSize: '0.95rem',
-  backgroundColor: 'var(--surface)',
-  color: 'var(--text)',
-  transition: 'border-color 0.2s ease, background-color 0.2s ease',
-};
-
-const sendButtonStyle: React.CSSProperties = {
-  padding: '0.875rem 1.5rem',
-  backgroundColor: 'var(--primary)',
-  color: 'white',
-  border: 'none',
-  borderRadius: '20px',
-  cursor: 'pointer',
-  fontSize: '1.1rem',
-  transition: 'transform 0.2s ease, opacity 0.2s ease',
-};
-
-const errorBoxStyle: React.CSSProperties = {
-  backgroundColor: 'rgba(247, 105, 105, 0.1)',
-  border: '1px solid rgba(247, 105, 105, 0.3)',
-  color: '#f8d7da',
-  padding: '1rem',
-  borderRadius: '12px',
-};
-
-const errorStyle: React.CSSProperties = {
-  backgroundColor: 'rgba(247, 105, 105, 0.1)',
-  color: '#f8d7da',
-  padding: '1rem',
-  margin: '1rem',
-  borderRadius: '8px',
-  border: '1px solid rgba(247, 105, 105, 0.3)',
-};

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { DemoBanner } from './DemoBanner.tsx';
+import { Btn } from './Btn.tsx';
 
 interface NavbarProps {
   isAuthenticated: boolean;
@@ -11,7 +12,10 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, unreadCount = 0, pendingCount = 0, onLogout }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const isActive = (path: string) => location.pathname.startsWith(path);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -21,85 +25,128 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, unreadCount = 0
   };
 
   return (
-    <nav style={navStyle}>
-      <div className="mobile-compact-pad" style={navContentStyle}>
-        <div style={logoStyle} onClick={() => navigate('/')}>
-          <span style={logoIconStyle}>💓</span>
-          <span style={logoTextStyle}>Match-Me</span>
-        </div>
+    <nav className="sticky top-0 z-50 bg-bg border-b-2 border-border">
+      {/* Top accent stripe */}
+      <div className="h-[3px] bg-yellow w-full" />
+
+      <div className="max-w-[1400px] mx-auto px-6 py-0 flex items-stretch justify-between">
+        {/* Logo */}
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 py-3 pr-6 border-r border-border hover:opacity-80 transition-opacity"
+        >
+          <img src="/favicon.svg" alt="heart" className="w-9 h-9" />
+          <span className="font-bold text-yellow tracking-wide uppercase text-sm" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.08em' }}>
+            Match-Me
+          </span>
+          <span className="text-[10px] text-muted font-normal ml-1 self-end mb-[5px]" style={{ fontFamily: 'var(--font-ui)' }}>
+            v3.0
+          </span>
+        </button>
+
         <DemoBanner />
 
         {isAuthenticated ? (
           <>
-            <div className="nav-links" style={navLinksStyle}>
-              <NavLink icon="🏠" label="Discover" onClick={() => navigate('/recommendations')} />
-              <NavLink icon="💬" label="Messages" badge={unreadCount} onClick={() => navigate('/chats')} />
-              <NavLink icon="🤝" label="Connections" badge={pendingCount} onClick={() => navigate('/connections')} />
-              <NavLink icon="👤" label="Profile" onClick={() => navigate('/profile')} />
-              <button onClick={handleLogout} style={logoutButtonStyle}>
-                Logout
+            {/* Desktop nav */}
+            <div className="hidden md:flex items-stretch">
+              <NavTab src="/discover.svg" label="Discover" active={isActive('/recommendations')} onClick={() => navigate('/recommendations')} />
+              <NavTab src="/messages.png" label="Messages" active={isActive('/chat')} badge={unreadCount} onClick={() => navigate('/chats')} />
+              <NavTab
+                src="/connections.svg"
+                label="Connections"
+                active={isActive('/connections')}
+                badge={pendingCount}
+                onClick={() => navigate('/connections')}
+              />
+              <NavTab src="/profile.svg" label="Profile" active={isActive('/profile')} onClick={() => navigate('/profile')} />
+            </div>
+
+            {/* Right side */}
+            <div className="flex items-center ml-auto pl-4 border-l border-border">
+              <button
+                onClick={handleLogout}
+                className="hidden md:flex items-center gap-1 px-4 py-3 text-red hover:bg-red/10 text-xs font-bold uppercase transition-colors"
+                style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.06em' }}
+              >
+                <span>✕</span>
+                <span>Logout</span>
+              </button>
+
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden relative flex items-center gap-1 px-4 py-3 text-text hover:bg-surface text-xs font-bold transition-colors"
+                style={{ fontFamily: 'var(--font-ui)' }}
+                aria-label="Open menu"
+              >
+                MENU {mobileMenuOpen ? '▲' : '▼'}
+                {(unreadCount > 0 || pendingCount > 0) && <span className="absolute top-2 right-1 w-2 h-2 bg-yellow" />}
               </button>
             </div>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="mobile-menu-toggle"
-              style={mobileMenuToggleStyle}
-              aria-label="Open menu"
-            >
-              ☰{(unreadCount > 0 || pendingCount > 0) && <span style={notificationDotStyle} />}
-            </button>
           </>
         ) : (
-          <div style={authLinksStyle}>
-            <button onClick={() => navigate('/login')} style={loginButtonStyle}>
-              Login
+          <div className="flex items-stretch ml-auto border-l border-border">
+            <button
+              onClick={() => navigate('/login')}
+              className="px-5 py-3 text-text hover:bg-surface text-xs font-bold uppercase border-r border-border transition-colors"
+              style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.06em' }}
+            >
+              Sign In
             </button>
-            <button onClick={() => navigate('/register')} style={signupButtonStyle}>
-              Sign Up
-            </button>
+            <Btn variant="chat" onClick={() => navigate('/register')}>
+              Register ▶
+            </Btn>
           </div>
         )}
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile menu */}
       {mobileMenuOpen && isAuthenticated && (
-        <div style={mobileMenuStyle}>
-          <NavLink
-            icon="🏠"
+        <div className="md:hidden border-t-2 border-border bg-panel">
+          <MobileNavItem
+            src="/discover.svg"
             label="Discover"
+            active={isActive('/recommendations')}
             onClick={() => {
               navigate('/recommendations');
               setMobileMenuOpen(false);
             }}
           />
-          <NavLink
-            icon="💬"
+          <MobileNavItem
+            src="/messages.png"
             label="Messages"
+            active={isActive('/chat')}
             badge={unreadCount}
             onClick={() => {
               navigate('/chats');
               setMobileMenuOpen(false);
             }}
           />
-          <NavLink
-            icon="🤝"
+          <MobileNavItem
+            src="/connections.svg"
             label="Connections"
+            active={isActive('/connections')}
             badge={pendingCount}
             onClick={() => {
               navigate('/connections');
               setMobileMenuOpen(false);
             }}
           />
-          <NavLink
-            icon="👤"
+          <MobileNavItem
+            src="/profile.svg"
             label="Profile"
+            active={isActive('/profile')}
             onClick={() => {
               navigate('/profile');
               setMobileMenuOpen(false);
             }}
           />
-          <button onClick={handleLogout} style={logoutButtonStyle}>
-            Logout
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-6 py-3 text-red hover:bg-red/10 border-t-2 border-border text-xs font-bold uppercase transition-colors"
+            style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.06em' }}
+          >
+            <span>✕</span> Logout
           </button>
         </div>
       )}
@@ -107,162 +154,56 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, unreadCount = 0
   );
 };
 
-interface NavLinkProps {
-  icon: string;
+// Desktop tab ───────────────────────────────────────────────────────────────
+
+interface NavTabProps {
+  src: string;
   label: string;
   badge?: number;
+  active?: boolean;
   onClick: () => void;
 }
 
-const NavLink: React.FC<NavLinkProps> = ({ icon, label, badge, onClick }) => (
-  <button onClick={onClick} style={navLinkButtonStyle}>
-    <span style={navIconStyle}>{icon}</span>
+const NavTab: React.FC<NavTabProps> = ({ src, label, badge, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`relative flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase border-r border-border transition-colors group ${
+      active ? 'text-yellow bg-surface' : 'text-muted hover:text-yellow hover:bg-surface'
+    }`}
+    style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.06em' }}
+  >
+    {/* Bottom active/hover rule */}
+    <span
+      className={`absolute bottom-0 left-0 right-0 h-[2px] bg-yellow transition-transform origin-left ${
+        active ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+      }`}
+    />
+    <img src={src} alt={label} className="w-8 h-8" />
     <span>{label}</span>
-    {badge && badge > 0 && <span style={badgeStyle}>{badge}</span>}
+    {badge && badge > 0 ? <span className="bg-red text-bg text-[10px] font-black px-1.5 py-px leading-none tabular-nums">{badge}</span> : null}
   </button>
 );
 
-// ============================================================================
-// Styles
-// ============================================================================
+// Mobile nav item ───────────────────────────────────────────────────────────
 
-const navStyle: React.CSSProperties = {
-  backgroundColor: 'rgba(8, 16, 29, 0.96)',
-  borderBottom: '1px solid var(--border)',
-  backdropFilter: 'blur(12px)',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-  position: 'sticky',
-  top: 0,
-  zIndex: 100,
-};
+interface MobileNavItemProps {
+  src: string;
+  label: string;
+  badge?: number;
+  active?: boolean;
+  onClick: () => void;
+}
 
-const navContentStyle: React.CSSProperties = {
-  maxWidth: '1400px',
-  margin: '0 auto',
-  padding: '1rem 2rem',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-};
-
-const logoStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.75rem',
-  cursor: 'pointer',
-  transition: 'opacity 0.2s ease',
-};
-
-const logoIconStyle: React.CSSProperties = {
-  fontSize: '1.5rem',
-};
-
-const logoTextStyle: React.CSSProperties = {
-  fontSize: '1.3rem',
-  fontWeight: 700,
-  whiteSpace: 'nowrap',
-  background: 'linear-gradient(135deg, var(--primary), #a459ff)',
-  backgroundClip: 'text',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-};
-
-const navLinksStyle: React.CSSProperties = {
-  gap: '0.5rem',
-  alignItems: 'center',
-};
-
-const navLinkButtonStyle: React.CSSProperties = {
-  background: 'transparent',
-  border: 'none',
-  color: 'var(--text)',
-  padding: '0.625rem 1rem',
-  fontSize: '0.9rem',
-  fontWeight: 500,
-  cursor: 'pointer',
-  borderRadius: '12px',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.5rem',
-  transition: 'all 0.3s ease',
-};
-
-const navIconStyle: React.CSSProperties = {
-  fontSize: '1.1rem',
-};
-
-const badgeStyle: React.CSSProperties = {
-  backgroundColor: '#f76969',
-  color: 'white',
-  fontSize: '0.7rem',
-  padding: '0.125rem 0.375rem',
-  borderRadius: '8px',
-  fontWeight: 700,
-  marginLeft: '0.25rem',
-};
-
-const logoutButtonStyle: React.CSSProperties = {
-  ...navLinkButtonStyle,
-  color: '#f76969',
-  borderLeft: '1px solid var(--border)',
-  paddingLeft: '1rem',
-};
-
-const authLinksStyle: React.CSSProperties = {
-  display: 'flex',
-  gap: '0.75rem',
-};
-
-const loginButtonStyle: React.CSSProperties = {
-  background: 'transparent',
-  border: '1px solid var(--primary)',
-  color: 'var(--primary)',
-  padding: '0.625rem 1.25rem',
-  borderRadius: '12px',
-  fontSize: '0.9rem',
-  fontWeight: 600,
-  cursor: 'pointer',
-  transition: 'all 0.3s ease',
-};
-
-const signupButtonStyle: React.CSSProperties = {
-  background: 'linear-gradient(135deg, var(--primary), #536dff)',
-  border: 'none',
-  color: 'white',
-  padding: '0.625rem 1.25rem',
-  borderRadius: '12px',
-  fontSize: '0.9rem',
-  fontWeight: 600,
-  cursor: 'pointer',
-  boxShadow: '0 8px 24px rgba(124, 152, 255, 0.3)',
-  transition: 'all 0.3s ease',
-};
-
-const mobileMenuToggleStyle: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  color: 'var(--text)',
-  fontSize: '1.5rem',
-  cursor: 'pointer',
-  position: 'relative',
-};
-
-const notificationDotStyle: React.CSSProperties = {
-  position: 'absolute',
-  top: '6px',
-  right: '6px',
-  width: '10px',
-  height: '10px',
-  borderRadius: '50%',
-  backgroundColor: '#f76969',
-  border: '2px solid rgba(8, 16, 29, 0.96)',
-};
-
-const mobileMenuStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.5rem',
-  padding: '1rem 2rem',
-  backgroundColor: 'rgba(17, 24, 39, 0.9)',
-  borderTop: '1px solid var(--border)',
-};
+const MobileNavItem: React.FC<MobileNavItemProps> = ({ src, label, badge, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center gap-3 px-6 py-3 border-b border-border text-xs font-bold uppercase transition-colors ${
+      active ? 'text-yellow bg-surface border-l-2 border-l-yellow' : 'text-muted hover:text-yellow hover:bg-surface'
+    }`}
+    style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.06em' }}
+  >
+    <img src={src} alt={label} className="w-8 h-8" />
+    <span className="flex-1 text-left">{label}</span>
+    {badge && badge > 0 ? <span className="bg-red text-bg text-[10px] font-black px-1.5 py-px leading-none tabular-nums">{badge}</span> : null}
+  </button>
+);

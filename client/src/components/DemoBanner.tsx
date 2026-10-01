@@ -3,23 +3,11 @@ export function DemoBanner() {
 
   return (
     <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        backgroundColor: 'rgba(245, 158, 11, 0.12)',
-        border: '1px solid rgba(245, 158, 11, 0.3)',
-        color: '#f59e0b',
-        fontSize: '0.75rem',
-        fontWeight: 600,
-        padding: '4px 10px',
-        borderRadius: '20px',
-        userSelect: 'none',
-        whiteSpace: 'nowrap',
-      }}
+      className="flex items-center gap-1.5 bg-surface/30 border border-yellow-hot text-black text-xs font-bold px-2.5 py-1 select-none whitespace-nowrap"
+      style={{ fontFamily: 'var(--font-ui)' }}
     >
-      <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#f59e0b', display: 'inline-block', flexShrink: 0 }} />
-      Demo mode
+      <span className="w-1.5 h-1.5 bg-yellow shrink-0" />
+      Demo mode enabled
     </div>
   );
 }

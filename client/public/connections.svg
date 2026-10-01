@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+
+  <!-- Left arm and hand -->
+  <path d="M6 28
+           L18 18
+           C21 16 24 17 27 20
+           L35 28
+           L29 34
+           L22 29
+           L15 38
+           L6 34
+           Z" fill="#69d6d1" stroke="#352052" stroke-width="3" stroke-linejoin="round"></path>
+
+  <!-- Right arm and hand -->
+  <path d="M58 28
+           L46 18
+           C43 16 40 17 37 20
+           L29 28
+           L35 34
+           L42 29
+           L49 38
+           L58 34
+           Z" fill="#ff7aa8" stroke="#352052" stroke-width="3" stroke-linejoin="round"></path>
+
+  <!-- Handshake center -->
+  <path d="M27 28
+           L32 33
+           L37 28
+           L41 32
+           L35 39
+           C33 41 31 41 29 39
+           L23 33
+           Z" fill="#ffe65c" stroke="#352052" stroke-width="3" stroke-linejoin="round"></path>
+
+</svg>

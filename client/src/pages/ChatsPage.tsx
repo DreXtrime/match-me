@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { messageService, profileService } from '../services/api.js';
 import { useWebSocket } from '../hooks/useWebSocket.js';
 import type { Chat, User } from '../types';
+import { Btn } from '../components/Btn.tsx';
+import { LoadingScreen } from '../components/Loadingscreen.tsx';
 
 export const ChatsPage: React.FC = () => {
   const [chats, setChats] = useState<Array<Chat & { user?: User; lastMessage?: string }>>([]);
@@ -55,7 +57,6 @@ export const ChatsPage: React.FC = () => {
         })
       );
 
-      // Sort by lastMessageTime
       chatsWithInfo.sort((a, b) => {
         const timeA = new Date(a.lastMessageTime).getTime();
         const timeB = new Date(b.lastMessageTime).getTime();
@@ -72,56 +73,108 @@ export const ChatsPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div style={containerStyle}>
-        <div style={loadingStyle}>Loading chats...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
-    <div className="mobile-compact-pad" style={containerStyle}>
-      <div style={contentStyle}>
-        <div style={headerSectionStyle}>
-          <h1 style={titleStyle}>Messages</h1>
-          <p style={subtitleStyle}>Connect with your matches</p>
+    <div className="mobile-compact-pad w-full min-h-[calc(100vh-60px)] py-10 px-4">
+      <div className="max-w-[700px] mx-auto flex flex-col gap-6">
+        {/* Page title */}
+        <div className="border-2 border-border bg-panel px-6 py-5">
+          <h1 className="text-2xl font-bold text-text mb-1" style={{ fontFamily: 'var(--font-ui)' }}>
+            Messages
+          </h1>
+          <p className="text-muted text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+            Connect with your matches
+          </p>
         </div>
 
-        {error && <div style={errorStyle}>{error}</div>}
+        {/* Error */}
+        {error && (
+          <div className="border-2 border-red bg-red/10 px-5 py-3 text-red text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+            ✕ {error}
+          </div>
+        )}
 
+        {/* Empty state */}
         {chats.length === 0 ? (
-          <div style={emptyStateStyle}>
-            <div style={emptyIconStyle}>💬</div>
-            <p style={emptyTextStyle}>No chats yet</p>
-            <p style={emptySubtextStyle}>Connect with someone and start chatting!</p>
-            <button onClick={() => navigate('/recommendations')} style={ctaButtonStyle}>
-              Find Matches
+          <div className="border-2 border-border bg-panel px-6 py-16 flex flex-col items-center gap-4 text-center">
+            <span className="text-5xl">💬</span>
+            <p className="text-text font-bold text-base" style={{ fontFamily: 'var(--font-ui)' }}>
+              No chats yet
+            </p>
+            <p className="text-muted text-sm max-w-xs" style={{ fontFamily: 'var(--font-ui)' }}>
+              Connect with someone and start chatting!
+            </p>
+            <button
+              onClick={() => navigate('/recommendations')}
+              className="px-6 py-3 bg-yellow text-bg font-bold text-sm border-2 border-yellow hover:opacity-90 transition-opacity"
+              style={{ fontFamily: 'var(--font-ui)' }}
+            >
+              ▶ Find Matches
             </button>
           </div>
         ) : (
-          <div style={chatsListStyle}>
-            {chats.map((chat) => (
-              <div key={chat.id} onClick={() => navigate(`/chat/${chat.id}`)} style={chatItemStyle}>
-                <div style={chatAvatarStyle}>
-                  {chat.user?.profilePicture ? (
-                    <img src={chat.user.profilePicture} alt={chat.user.name} style={avatarImageStyle} />
-                  ) : (
-                    <div style={avatarPlaceholderStyle}>{chat.user?.name?.charAt(0) || '?'}</div>
-                  )}
-                  {chat.user?.isOnline && <div style={onlineBadgeStyle} />}
-                </div>
+          /* Chats list */
+          <div className="border-2 border-border">
+            {/* Panel header */}
+            <div className="flex items-center justify-between bg-surface border-b-2 border-border px-5 py-2">
+              <span className="text-yellow font-bold text-sm uppercase tracking-wider" style={{ fontFamily: 'var(--font-ui)' }}>
+                Chats
+              </span>
+              <span
+                className="bg-bg border border-border text-muted text-xs font-bold px-2 py-0.5 tabular-nums"
+                style={{ fontFamily: 'var(--font-ui)' }}
+              >
+                {chats.length}
+              </span>
+            </div>
 
-                <div style={chatInfoStyle}>
-                  <div style={chatHeaderStyle}>
-                    <h3 style={chatNameStyle}>{chat.user?.name || `User ${chat.id.substring(0, 8)}`}</h3>
-                    <span style={timeStyle}>{formatTime(new Date(chat.lastMessageTime))}</span>
+            {/* Chat rows */}
+            <div className="bg-panel divide-y divide-border">
+              {chats.map((chat) => (
+                <div
+                  key={chat.id}
+                  onClick={() => navigate(`/chat/${chat.id}`)}
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-surface transition-colors cursor-pointer"
+                >
+                  {/* Avatar */}
+                  <div className="relative shrink-0">
+                    {chat.user?.profilePicture ? (
+                      <img src={chat.user.profilePicture} alt={chat.user.name} className="w-24 h-24 object-cover border border-border" />
+                    ) : (
+                      <div
+                        className="w-24 h-24 bg-surface border border-border flex items-center justify-center text-yellow font-black text-lg"
+                        style={{ fontFamily: 'var(--font-ui)' }}
+                      >
+                        {chat.user?.name?.charAt(0) ?? '?'}
+                      </div>
+                    )}
+                    {chat.user?.isOnline && <span className="absolute bottom-0 right-0 w-3 h-3 bg-green border-2 border-panel" />}
                   </div>
-                  <p style={statusStyle}>{chat.user?.isOnline ? '🟢 Online' : '🔘 Offline'}</p>
-                </div>
 
-                <div style={arrowStyle}>→</div>
-              </div>
-            ))}
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                      <p className="text-text font-bold text-base truncate" style={{ fontFamily: 'var(--font-ui)' }}>
+                        {chat.user?.name || `User ${chat.id.substring(0, 8)}`}
+                      </p>
+                      <span className="text-text text-xs whitespace-nowrap" style={{ fontFamily: 'var(--font-ui)' }}>
+                        Last Message: {formatTime(new Date(chat.lastMessageTime))}
+                      </span>
+                    </div>
+                    <p className={`text-sm truncate ${chat.user?.isOnline ? 'text-green' : 'text-muted'}`} style={{ fontFamily: 'var(--font-ui)' }}>
+                      {chat.user?.isOnline ? '● Online' : '○ Offline'}
+                    </p>
+                  </div>
+
+                  {/* Arrow */}
+                  <Btn variant="primary" onClick={() => {}}>
+                    Chat →
+                  </Btn>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -136,188 +189,14 @@ function formatTime(date: Date): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'now';
-  if (diffMins < 60) return `${diffMins}m`;
-  if (diffHours < 24) return `${diffHours}h`;
-  if (diffDays < 7) return `${diffDays}d`;
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} Minute${diffMins === 1 ? '' : 's'} ago`;
+  if (diffHours < 24) return `${diffHours} Hour${diffHours === 1 ? '' : 's'} ago`;
+  if (diffDays < 30) return `${diffDays} Day${diffDays === 1 ? '' : 's'} ago`;
 
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) return `${diffMonths} Month${diffMonths === 1 ? '' : 's'} ago`;
+
+  const diffYears = Math.floor(diffDays / 365);
+  return `${diffYears} Year${diffYears === 1 ? '' : 's'} ago`;
 }
-
-const containerStyle: React.CSSProperties = {
-  minHeight: 'calc(100vh - 60px)',
-  backgroundColor: 'var(--background)',
-  padding: '2rem 1rem',
-};
-
-const contentStyle: React.CSSProperties = {
-  maxWidth: '700px',
-  margin: '0 auto',
-};
-
-const headerSectionStyle: React.CSSProperties = {
-  marginBottom: '2rem',
-  paddingBottom: '1.5rem',
-  borderBottom: '1px solid var(--border)',
-};
-
-const titleStyle: React.CSSProperties = {
-  margin: '0 0 0.5rem 0',
-  fontSize: '2rem',
-  fontWeight: 700,
-  color: 'var(--text)',
-};
-
-const subtitleStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: '0.95rem',
-  color: 'var(--muted)',
-};
-
-const loadingStyle: React.CSSProperties = {
-  color: 'var(--muted)',
-  fontSize: '1.1rem',
-  textAlign: 'center',
-  padding: '3rem 0',
-};
-
-const chatsListStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '1rem',
-};
-
-const chatItemStyle: React.CSSProperties = {
-  backgroundColor: 'var(--surface)',
-  padding: '1.25rem',
-  borderRadius: '16px',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1rem',
-  cursor: 'pointer',
-  border: '1px solid var(--border)',
-  transition: 'all 0.3s ease',
-};
-
-const chatAvatarStyle: React.CSSProperties = {
-  position: 'relative',
-  flexShrink: 0,
-};
-
-const avatarImageStyle: React.CSSProperties = {
-  width: '56px',
-  height: '56px',
-  borderRadius: '50%',
-  objectFit: 'cover',
-  border: '2px solid var(--primary)',
-};
-
-const avatarPlaceholderStyle: React.CSSProperties = {
-  width: '56px',
-  height: '56px',
-  borderRadius: '50%',
-  backgroundColor: 'var(--primary-soft)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '1.5rem',
-  fontWeight: 700,
-  border: '2px solid var(--primary)',
-};
-
-const onlineBadgeStyle: React.CSSProperties = {
-  position: 'absolute',
-  bottom: 0,
-  right: 0,
-  width: '16px',
-  height: '16px',
-  borderRadius: '50%',
-  backgroundColor: '#44d190',
-  border: '3px solid var(--surface)',
-};
-
-const chatInfoStyle: React.CSSProperties = {
-  flex: 1,
-  minWidth: 0,
-};
-
-const chatHeaderStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'baseline',
-  marginBottom: '0.35rem',
-  gap: '1rem',
-};
-
-const chatNameStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: '1rem',
-  fontWeight: 600,
-  color: 'var(--text)',
-};
-
-const timeStyle: React.CSSProperties = {
-  fontSize: '0.85rem',
-  color: 'var(--muted)',
-  whiteSpace: 'nowrap',
-};
-
-const statusStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: '0.85rem',
-  color: 'var(--muted)',
-};
-
-const arrowStyle: React.CSSProperties = {
-  fontSize: '1.2rem',
-  color: 'var(--primary)',
-  flexShrink: 0,
-};
-
-const emptyStateStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '4rem 2rem',
-  textAlign: 'center',
-};
-
-const emptyIconStyle: React.CSSProperties = {
-  fontSize: '3.5rem',
-  marginBottom: '1rem',
-};
-
-const emptyTextStyle: React.CSSProperties = {
-  fontSize: '1.2rem',
-  fontWeight: 600,
-  color: 'var(--text)',
-  margin: '0 0 0.5rem 0',
-};
-
-const emptySubtextStyle: React.CSSProperties = {
-  fontSize: '0.95rem',
-  color: 'var(--muted)',
-  margin: '0 0 2rem 0',
-};
-
-const ctaButtonStyle: React.CSSProperties = {
-  padding: '0.875rem 2rem',
-  backgroundColor: 'linear-gradient(135deg, var(--primary), #536dff)',
-  color: 'white',
-  border: 'none',
-  borderRadius: '20px',
-  fontSize: '0.95rem',
-  fontWeight: 600,
-  cursor: 'pointer',
-  transition: 'transform 0.2s ease, opacity 0.2s ease',
-};
-
-const errorStyle: React.CSSProperties = {
-  backgroundColor: 'rgba(247, 105, 105, 0.1)',
-  color: '#f8d7da',
-  padding: '1rem',
-  marginBottom: '1.5rem',
-  borderRadius: '12px',
-  border: '1px solid rgba(247, 105, 105, 0.3)',
-};

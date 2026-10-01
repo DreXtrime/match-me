@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+
+  <!-- Profile circle -->
+  <circle cx="32" cy="32" r="25" fill="#ffe65c" stroke="#352052" stroke-width="4"></circle>
+
+  <!-- Head -->
+  <circle cx="32" cy="24" r="8" fill="#ff7aa8" stroke="#352052" stroke-width="3"></circle>
+
+  <!-- Body -->
+  <path d="M19 46
+           C19 39 24 34 32 34
+           C40 34 45 39 45 46
+           V48
+           H19
+           Z" fill="#69d6d1" stroke="#352052" stroke-width="3" stroke-linejoin="round"></path>
+
+</svg>
