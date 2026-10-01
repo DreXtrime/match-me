@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api.js';
+import { Btn } from '../components/Btn.tsx';
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -14,7 +15,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect if already logged in
     if (localStorage.getItem('token')) {
       navigate('/');
     }
@@ -39,87 +39,51 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={formContainerStyle}>
-        <h2>Login to Match-Me</h2>
-        {error && <div style={errorStyle}>{error}</div>}
-        <form onSubmit={handleSubmit} style={formStyle}>
-          <div style={formGroupStyle}>
-            <label>Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
-          </div>
-          <div style={formGroupStyle}>
-            <label>Password</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={inputStyle} />
-          </div>
-          <button type="submit" disabled={loading} style={buttonStyle}>
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-        <p>
-          Don't have an account?{' '}
-          <a href="/register" style={{ color: 'var(--primary)' }}>
-            Sign up here
-          </a>
-        </p>
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-[400px] border-2 border-border">
+        {/* Header */}
+        <div className="bg-surface border-b-2 border-border px-5 py-2">
+          <span className="text-yellow font-bold text-sm uppercase tracking-wider" style={{ fontFamily: 'var(--font-ui)' }}>
+            Match-Me
+          </span>
+        </div>
+
+        <div className="bg-panel px-6 py-6 flex flex-col gap-5">
+          <h1 className="text-text font-bold text-xl m-0" style={{ fontFamily: 'var(--font-ui)' }}>
+            Sign in
+          </h1>
+
+          {error && (
+            <div className="border border-red/30 bg-red/10 text-red px-4 py-3 text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+              ✕ {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-muted text-xs font-bold uppercase tracking-wider" style={{ fontFamily: 'var(--font-ui)' }}>
+                Email
+              </label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-muted text-xs font-bold uppercase tracking-wider" style={{ fontFamily: 'var(--font-ui)' }}>
+                Password
+              </label>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+
+            <Btn variant="chat" onClick={() => {}}>
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Btn>
+          </form>
+
+          <p className="text-muted text-sm m-0 text-center" style={{ fontFamily: 'var(--font-ui)' }}>
+            No account? <a href="/register">Sign up here</a>
+          </p>
+        </div>
       </div>
     </div>
   );
-};
-
-const containerStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  minHeight: '100vh',
-  backgroundColor: 'var(--background)',
-};
-
-const formContainerStyle: React.CSSProperties = {
-  backgroundColor: 'var(--surface)',
-  padding: '2rem',
-  borderRadius: '16px',
-  boxShadow: 'var(--shadow)',
-  width: '100%',
-  maxWidth: '400px',
-  border: '1px solid var(--border)',
-};
-
-const formStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '1rem',
-};
-
-const formGroupStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.5rem',
-};
-
-const inputStyle: React.CSSProperties = {
-  padding: '0.75rem',
-  border: '1px solid var(--border)',
-  borderRadius: '8px',
-  fontSize: '1rem',
-  backgroundColor: 'var(--surface-light)',
-  color: 'var(--text)',
-};
-
-const buttonStyle: React.CSSProperties = {
-  padding: '0.75rem',
-  backgroundColor: 'var(--primary)',
-  color: 'white',
-  border: 'none',
-  borderRadius: '8px',
-  fontSize: '1rem',
-  cursor: 'pointer',
-};
-
-const errorStyle: React.CSSProperties = {
-  backgroundColor: '#451616',
-  color: '#f8d7da',
-  padding: '1rem',
-  borderRadius: '8px',
-  marginBottom: '1rem',
 };

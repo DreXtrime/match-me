@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileService } from '../services/api.js';
 import type { Profile } from '../types/index.js';
+import { Btn } from '../components/Btn.tsx';
 
 export const DashboardPage: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -41,20 +42,20 @@ export const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div style={containerStyle}>
-      <div style={contentStyle}>
-        <div className="mobile-compact-pad" style={welcomeBoxStyle}>
+    <div className="w-full min-h-[calc(100vh-60px)] py-10 px-4">
+      <div className="max-w-4x1 mx-auto flex flex-col gap-6">
+        <div className="border-2 border-border bg-panel px-6 py-5">
           <h2>Welcome, {profile.first_name || 'there'}! 👋</h2>
           <p>You're all set up and ready to meet amazing people.</p>
         </div>
 
-        <div style={gridStyle}>
-          <div className="mobile-compact-pad" style={cardStyle}>
-            <h3>🔍 Discover Matches</h3>
+        <div className="max-w-4x1 mx-auto flex flex-col gap-6">
+          <div className="border-2 border-border bg-surface px-6 py-6">
+            <h3>Discover Matches</h3>
             <p>Browse and connect with people who share your interests.</p>
-            <button onClick={() => navigate('/recommendations')} style={buttonStyle}>
+            <Btn variant="primary" onClick={() => navigate('/recommendations')}>
               Start Discovering
-            </button>
+            </Btn>
           </div>
         </div>
       </div>
@@ -66,36 +67,6 @@ const containerStyle: React.CSSProperties = {
   minHeight: 'calc(100vh - 60px)',
   backgroundColor: 'var(--background)',
   padding: '2rem 1rem',
-};
-
-const contentStyle: React.CSSProperties = {
-  maxWidth: '1200px',
-  margin: '0 auto',
-};
-
-const welcomeBoxStyle: React.CSSProperties = {
-  backgroundColor: 'var(--surface-light)',
-  border: '1px solid var(--border)',
-  padding: '2rem',
-  borderRadius: '16px',
-  marginBottom: '2rem',
-  textAlign: 'center',
-};
-
-const gridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-  gap: '2rem',
-};
-
-const cardStyle: React.CSSProperties = {
-  backgroundColor: 'var(--surface)',
-  padding: '2rem',
-  borderRadius: '16px',
-  boxShadow: 'var(--shadow)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '1rem',
 };
 
 const buttonStyle: React.CSSProperties = {

@@ -1,18 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#FF6B8A"></stop>
-      <stop offset="100%" stop-color="#A855F7"></stop>
-    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="4" dy="5" stdDeviation="0" flood-color="#24153d"></feDropShadow>
+    </filter>
   </defs>
 
-  <!-- Background -->
-  <rect width="64" height="64" rx="16" fill="url(#bg)"></rect>
+  <!-- dark pixel badge -->
+  <rect x="28" y="28" width="200" height="200" rx="28" fill="#352052" stroke="#24153d" stroke-width="8" filter="url(#shadow)"></rect>
 
-  <!-- Person -->
-  <circle cx="32" cy="23" r="7" fill="white"></circle>
-  <path d="M20 47c2-7 9-11 12-11s10 4 12 11" fill="none" stroke="white" stroke-width="5" stroke-linecap="round"></path>
+  <!-- arcade style border -->
+  <rect x="42" y="42" width="172" height="172" rx="18" fill="#ffcb8a" stroke="#5b2b63" stroke-width="6"></rect>
 
-  <!-- Spark -->
-  <path d="M46 14l1.4 3.6L51 19l-3.6 1.4L46 24l-1.4-3.6L41 19l3.6-1.4z" fill="white"></path>
+  <!-- hearts -->
+  <path d="M77 92
+           C77 75 101 70 111 87
+           C121 70 145 75 145 92
+           C145 115 111 135 111 135
+           C111 135 77 115 77 92Z" fill="#ff5b72" stroke="#5b2b63" stroke-width="6"></path>
+
+  <path d="M136 72
+           C136 58 154 54 162 67
+           C170 54 188 58 188 72
+           C188 90 162 106 162 106
+           C162 106 136 90 136 72Z" fill="#ff7fa0" stroke="#5b2b63" stroke-width="5"></path>
+
+  <!-- pixel lightning match symbol -->
+  <path d="M112 142
+           L144 142
+           L132 165
+           L151 165
+           L105 210
+           L117 178
+           L96 178Z" fill="#ffe65c" stroke="#5b2b63" stroke-width="6" stroke-linejoin="round"></path>
+
+  <!-- small pixel sparkles -->
+  <rect x="65" y="155" width="10" height="10" fill="#5b2b63"></rect>
+  <rect x="183" y="132" width="10" height="10" fill="#5b2b63"></rect>
+  <rect x="72" y="137" width="6" height="6" fill="#ff5b72"></rect>
+  <rect x="174" y="112" width="6" height="6" fill="#ff5b72"></rect>
+
+  <!-- retro UI dots -->
+  <circle cx="67" cy="67" r="5" fill="#ff5b72"></circle>
+  <circle cx="82" cy="67" r="5" fill="#ffe65c"></circle>
+  <circle cx="97" cy="67" r="5" fill="#69d6d1"></circle>
+
+  <!-- pixel shine -->
+  <path d="M184 175h8v8h-8zM176 183h8v8h-8zM184 191h8v8h-8zM192 183h8v8h-8z" fill="#69d6d1"></path>
 </svg>

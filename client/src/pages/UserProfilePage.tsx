@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { profileService } from '../services/api.js';
 import { useWebSocket } from '../hooks/useWebSocket.js';
 import type { Profile, BioData, User } from '../types';
+import { Btn } from '../components/Btn.tsx';
+import { LoadingScreen } from '../components/Loadingscreen.tsx';
 
 function formatEnum(value: string): string {
   return value
@@ -47,260 +49,172 @@ export const UserProfilePage: React.FC = () => {
     };
   }, [userId, on, off]);
 
-  if (loading)
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (error) {
     return (
-      <div className="mobile-compact-pad" style={containerStyle}>
-        <div style={loadingStyle}>Loading profile...</div>
+      <div className="min-h-[calc(100vh-60px)] flex items-center justify-center px-4">
+        <div className="border-2 border-red bg-red/10 text-red px-5 py-3 text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+          ✕ {error}
+        </div>
       </div>
     );
-  if (error)
-    return (
-      <div style={containerStyle}>
-        <div style={errorStyle}>{error}</div>
-      </div>
-    );
+  }
 
   const picture = profile?.profilePicture;
+  const name = user?.name ?? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim();
 
   return (
-    <div className="mobile-compact-pad" style={containerStyle}>
-      <div className="mobile-compact-pad" style={cardStyle}>
-        <button onClick={() => navigate(-1)} style={backButtonStyle}>
-          ← Back
-        </button>
-
-        <div className="mobile-stack" style={headerStyle}>
-          <div style={avatarWrapStyle}>
-            {picture ? (
-              <img src={picture} alt={user?.name} style={avatarStyle} />
-            ) : (
-              <div style={avatarPlaceholderStyle}>{user?.name?.charAt(0) ?? '?'}</div>
-            )}
-            <span style={onlineDotStyle(user?.isOnline ?? false)} title={user?.isOnline ? 'Online' : 'Offline'} />
+    <div className="mobile-compact-pad w-full min-h-[calc(100vh-60px)] py-10 px-4">
+      <div className="max-w-[600px] mx-auto flex flex-col gap-0">
+        {/* Card sheet */}
+        <div className="border-2 border-border">
+          {/* Header bar with back button */}
+          <div className="bg-surface border-b-2 border-border px-5 py-2 flex items-center justify-between">
+            <span className="text-yellow font-bold text-sm uppercase tracking-wider" style={{ fontFamily: 'var(--font-ui)' }}>
+              Profile
+            </span>
+            <Btn variant="chat" onClick={() => navigate(-1)}>
+              ← Back
+            </Btn>
           </div>
-          <div>
-            <h1 style={nameStyle}>{user?.name ?? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()}</h1>
-            <p style={onlineLabelStyle}>{user?.isOnline ? '🟢 Online' : '🔘 Offline'}</p>
-            {bio?.age && <p style={ageStyle}>{bio.age} years old</p>}
+
+          {/* Avatar + name hero */}
+          <div className="mobile-stack bg-panel px-5 py-6 border-b-2 border-border flex items-center gap-5">
+            <div className="relative shrink-0">
+              {picture ? (
+                <img src={picture} alt={name} className="w-20 h-20 object-cover border-2 border-border" />
+              ) : (
+                <div
+                  className="w-20 h-20 bg-surface border-2 border-border flex items-center justify-center text-yellow font-black text-3xl"
+                  style={{ fontFamily: 'var(--font-ui)' }}
+                >
+                  {name?.charAt(0) ?? '?'}
+                </div>
+              )}
+              <span
+                className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-panel ${user?.isOnline ? 'bg-green' : 'bg-muted'}`}
+                title={user?.isOnline ? 'Online' : 'Offline'}
+              />
+            </div>
+
+            <div className="flex flex-col gap-0.5">
+              <h1 className="text-text font-bold text-2xl m-0" style={{ fontFamily: 'var(--font-ui)' }}>
+                {name}
+              </h1>
+              <p className={`text-sm m-0 ${user?.isOnline ? 'text-green' : 'text-muted'}`} style={{ fontFamily: 'var(--font-ui)' }}>
+                {user?.isOnline ? '● Online' : '○ Offline'}
+              </p>
+              {bio?.age && (
+                <p className="text-muted text-sm m-0" style={{ fontFamily: 'var(--font-ui)' }}>
+                  {bio.age} years old
+                </p>
+              )}
+            </div>
           </div>
+
+          {/* Message action */}
+          <div className="bg-surface border-b-2 border-border px-5 py-3">
+            <Btn variant="chat" onClick={() => navigate(`/chat/${userId}`)}>
+              Send Message
+            </Btn>
+          </div>
+
+          {/* About */}
+          {profile?.aboutMe && (
+            <>
+              <SectionHeader label="About" />
+              <div className="bg-panel px-5 py-4 border-b-2 border-border">
+                <p className="text-text text-sm leading-relaxed m-0" style={{ fontFamily: 'var(--font-ui)' }}>
+                  {profile.aboutMe}
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* Looking for */}
+          {bio?.relationshipGoal && (
+            <>
+              <SectionHeader label="Looking For" />
+              <div className="bg-panel px-5 py-4 border-b-2 border-border">
+                <ChipLookingFor label={formatEnum(bio.relationshipGoal)} />
+              </div>
+            </>
+          )}
+
+          {/* Interests */}
+          {bio?.interests && bio.interests.length > 0 && (
+            <>
+              <SectionHeader label="Interests" />
+              <div className="bg-panel px-5 py-4 border-b-2 border-border flex flex-wrap gap-2">
+                {bio.interests.map((i) => (
+                  <ChipInterests key={i} label={formatEnum(i)} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Friday night */}
+          {bio?.fridayNightActivities && bio.fridayNightActivities.length > 0 && (
+            <>
+              <SectionHeader label="Friday Night" />
+              <div className="bg-panel px-5 py-4 border-b-2 border-border flex flex-wrap gap-2">
+                {bio.fridayNightActivities.map((a) => (
+                  <ChipFridayNight key={a} label={formatEnum(a)} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Music */}
+          {bio?.musicGenres && bio.musicGenres.length > 0 && (
+            <>
+              <SectionHeader label="Music" />
+              <div className="bg-panel px-5 py-4 flex flex-wrap gap-2">
+                {bio.musicGenres.map((g) => (
+                  <ChipMusic key={g} label={formatEnum(g)} />
+                ))}
+              </div>
+            </>
+          )}
         </div>
-
-        <div style={actionsStyle}>
-          <button onClick={() => navigate(`/chat/${userId}`)} style={chatButtonStyle}>
-            💬 Send Message
-          </button>
-        </div>
-
-        {profile?.aboutMe && (
-          <section style={sectionStyle}>
-            <h3 style={sectionTitleStyle}>About</h3>
-            <p style={aboutTextStyle}>{profile.aboutMe}</p>
-          </section>
-        )}
-
-        {bio?.relationshipGoal && (
-          <section style={sectionStyle}>
-            <h3 style={sectionTitleStyle}>Looking for</h3>
-            <span style={chipStyle}>{formatEnum(bio.relationshipGoal)}</span>
-          </section>
-        )}
-
-        {bio?.interests && bio.interests.length > 0 && (
-          <section style={sectionStyle}>
-            <h3 style={sectionTitleStyle}>Interests</h3>
-            <div style={chipsStyle}>
-              {bio.interests.map((i) => (
-                <span key={i} style={chipStyle}>
-                  {formatEnum(i)}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {bio?.fridayNightActivities && bio.fridayNightActivities.length > 0 && (
-          <section style={sectionStyle}>
-            <h3 style={sectionTitleStyle}>Friday night</h3>
-            <div style={chipsStyle}>
-              {bio.fridayNightActivities.map((a) => (
-                <span key={a} style={chipStyle}>
-                  {formatEnum(a)}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {bio?.musicGenres && bio.musicGenres.length > 0 && (
-          <section style={sectionStyle}>
-            <h3 style={sectionTitleStyle}>Music</h3>
-            <div style={chipsStyle}>
-              {bio.musicGenres.map((g) => (
-                <span key={g} style={chipStyle}>
-                  {formatEnum(g)}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </div>
   );
 };
 
-const containerStyle: React.CSSProperties = {
-  minHeight: 'calc(100vh - 60px)',
-  backgroundColor: 'var(--background)',
-  padding: '2rem 1rem',
-  display: 'flex',
-  justifyContent: 'center',
-};
+// Helpers ───────────────────────────────────────────────────────────────────
 
-const cardStyle: React.CSSProperties = {
-  backgroundColor: 'var(--surface)',
-  borderRadius: '24px',
-  border: '1px solid var(--border)',
-  padding: '2rem',
-  width: '100%',
-  maxWidth: '600px',
-  height: 'fit-content',
-  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
-};
+const SectionHeader: React.FC<{ label: string }> = ({ label }) => (
+  <div className="bg-surface border-b-2 border-border px-5 py-2">
+    <span className="text-yellow font-bold text-sm uppercase tracking-wider" style={{ fontFamily: 'var(--font-ui)' }}>
+      {label}
+    </span>
+  </div>
+);
 
-const backButtonStyle: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  color: 'var(--primary)',
-  fontSize: '0.95rem',
-  cursor: 'pointer',
-  padding: 0,
-  marginBottom: '1.5rem',
-  display: 'block',
-};
+const ChipLookingFor: React.FC<{ label: string }> = ({ label }) => (
+  <span className="px-3 py-1 text-xs font-bold border border-border text-red bg-red/30" style={{ fontFamily: 'var(--font-ui)' }}>
+    {label}
+  </span>
+);
 
-const headerStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1.5rem',
-  marginBottom: '1.5rem',
-};
+const ChipInterests: React.FC<{ label: string }> = ({ label }) => (
+  <span className="px-3 py-1 text-xs font-bold border border-border text-text bg-surface" style={{ fontFamily: 'var(--font-ui)' }}>
+    {label}
+  </span>
+);
 
-const avatarWrapStyle: React.CSSProperties = {
-  position: 'relative',
-  flexShrink: 0,
-};
+const ChipFridayNight: React.FC<{ label: string }> = ({ label }) => (
+  <span className="px-3 py-1 text-xs font-bold border border-border text-[#102910] bg-green/50" style={{ fontFamily: 'var(--font-ui)' }}>
+    {label}
+  </span>
+);
 
-const avatarStyle: React.CSSProperties = {
-  width: '90px',
-  height: '90px',
-  borderRadius: '50%',
-  objectFit: 'cover',
-  border: '3px solid var(--primary)',
-};
-
-const avatarPlaceholderStyle: React.CSSProperties = {
-  width: '90px',
-  height: '90px',
-  borderRadius: '50%',
-  backgroundColor: 'var(--primary-soft)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '2.5rem',
-  fontWeight: 700,
-  border: '3px solid var(--primary)',
-};
-
-const onlineDotStyle = (isOnline: boolean): React.CSSProperties => ({
-  position: 'absolute',
-  bottom: 4,
-  right: 4,
-  width: '16px',
-  height: '16px',
-  borderRadius: '50%',
-  backgroundColor: isOnline ? '#44d190' : '#9bb2d6',
-  border: '3px solid var(--surface)',
-});
-
-const nameStyle: React.CSSProperties = {
-  margin: '0 0 0.25rem 0',
-  fontSize: '1.6rem',
-  fontWeight: 700,
-};
-
-const onlineLabelStyle: React.CSSProperties = {
-  margin: '0 0 0.25rem 0',
-  fontSize: '0.85rem',
-  color: 'var(--muted)',
-};
-
-const ageStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: '0.95rem',
-  color: 'var(--muted)',
-};
-
-const actionsStyle: React.CSSProperties = {
-  marginBottom: '2rem',
-};
-
-const chatButtonStyle: React.CSSProperties = {
-  background: 'linear-gradient(135deg, var(--primary), #536dff)',
-  border: 'none',
-  color: 'white',
-  padding: '0.75rem 1.5rem',
-  borderRadius: '12px',
-  fontSize: '0.95rem',
-  fontWeight: 600,
-  cursor: 'pointer',
-};
-
-const sectionStyle: React.CSSProperties = {
-  marginBottom: '1.5rem',
-};
-
-const sectionTitleStyle: React.CSSProperties = {
-  margin: '0 0 0.75rem 0',
-  fontSize: '0.8rem',
-  fontWeight: 600,
-  textTransform: 'uppercase',
-  letterSpacing: '0.08em',
-  color: 'var(--muted)',
-};
-
-const aboutTextStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: '0.95rem',
-  lineHeight: 1.6,
-  color: 'var(--text)',
-};
-
-const chipsStyle: React.CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: '0.5rem',
-};
-
-const chipStyle: React.CSSProperties = {
-  backgroundColor: 'var(--primary-soft)',
-  color: 'var(--primary)',
-  border: '1px solid rgba(124, 152, 255, 0.3)',
-  borderRadius: '20px',
-  padding: '0.35rem 0.85rem',
-  fontSize: '0.85rem',
-  fontWeight: 500,
-};
-
-const loadingStyle: React.CSSProperties = {
-  color: 'var(--muted)',
-  fontSize: '1.1rem',
-  paddingTop: '4rem',
-};
-
-const errorStyle: React.CSSProperties = {
-  backgroundColor: 'rgba(247, 105, 105, 0.1)',
-  color: '#f8d7da',
-  padding: '1rem',
-  borderRadius: '12px',
-  border: '1px solid rgba(247, 105, 105, 0.3)',
-};
+const ChipMusic: React.FC<{ label: string }> = ({ label }) => (
+  <span className="px-3 py-1 text-xs font-bold border border-border text-[#712693] bg-[#9c5eaa]/30" style={{ fontFamily: 'var(--font-ui)' }}>
+    {label}
+  </span>
+);

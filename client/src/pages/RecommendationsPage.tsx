@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { recommendationService, profileService, connectionService } from '../services/api.js';
 import type { Profile, BioData } from '../types';
+import { Btn } from '../components/Btn.tsx';
 
 export const RecommendationsPage: React.FC = () => {
   const [recommendations, setRecommendations] = useState<string[]>([]);
@@ -56,8 +57,7 @@ export const RecommendationsPage: React.FC = () => {
     if (!currentProfile) return;
     try {
       setActionPending(true);
-      const targetUserId = recommendations[currentIndex];
-      await connectionService.requestConnection(targetUserId);
+      await connectionService.requestConnection(recommendations[currentIndex]);
       handleNext();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send connection request');
@@ -70,8 +70,7 @@ export const RecommendationsPage: React.FC = () => {
     if (!currentProfile) return;
     try {
       setActionPending(true);
-      const targetUserId = recommendations[currentIndex];
-      await recommendationService.dismissRecommendation(targetUserId);
+      await recommendationService.dismissRecommendation(recommendations[currentIndex]);
       handleNext();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to dismiss recommendation');
@@ -88,31 +87,44 @@ export const RecommendationsPage: React.FC = () => {
     }
   };
 
+  const progress = recommendations.length > 0 ? ((currentIndex + 1) / recommendations.length) * 100 : 0;
+
+  // Loading skeleton ──────────────────────────────────────────────────────
+
   if (loading) {
     return (
-      <div style={containerStyle}>
-        <div style={cardStyle}>
-          <div style={skeletonImageStyle} />
-          <div style={skeletonInfoStyle} />
+      <div className="min-h-[calc(100vh-60px)] flex items-center justify-center py-10 px-4">
+        <div className="w-full max-w-[500px] border-2 border-border overflow-hidden">
+          <div className="h-[450px] bg-surface animate-pulse" />
+          <div className="p-6 flex flex-col gap-3 bg-panel">
+            <div className="h-4 bg-surface rounded w-3/4 animate-pulse" />
+            <div className="h-4 bg-surface rounded w-1/2 animate-pulse" />
+          </div>
         </div>
       </div>
     );
   }
 
+  // Empty / error full-screen ─────────────────────────────────────────────
+
   if (error && recommendations.length === 0) {
     return (
-      <div style={containerStyle}>
-        <div style={errorContainerStyle}>
-          <div style={errorIconStyle}>💔</div>
-          <p style={errorTitleStyle}>{error}</p>
-          <p style={errorSubtextStyle}>Come back later for more matches!</p>
-          <div style={errorActionsStyle}>
-            <button onClick={loadRecommendations} style={primaryButtonStyle}>
+      <div className="min-h-[calc(100vh-60px)] flex items-center justify-center py-10 px-4">
+        <div className="w-full max-w-[500px] border-2 border-border bg-panel px-8 py-12 text-center">
+          <div className="text-5xl mb-4">💔</div>
+          <p className="text-text font-bold text-lg mb-1" style={{ fontFamily: 'var(--font-ui)' }}>
+            {error}
+          </p>
+          <p className="text-muted text-sm mb-8" style={{ fontFamily: 'var(--font-ui)' }}>
+            Come back later for more matches!
+          </p>
+          <div className="flex-1">
+            <Btn variant="primary" onClick={loadRecommendations}>
               Refresh
-            </button>
-            <button onClick={() => navigate('/connections')} style={secondaryButtonStyle}>
+            </Btn>
+            <Btn variant="primary" onClick={() => navigate('/connections')}>
               View Connections
-            </button>
+            </Btn>
           </div>
         </div>
       </div>
@@ -121,10 +133,16 @@ export const RecommendationsPage: React.FC = () => {
 
   if (!currentProfile) {
     return (
-      <div style={containerStyle}>
-        <div style={errorContainerStyle}>
-          <p style={errorTitleStyle}>Profile not found</p>
-          <button onClick={loadRecommendations} style={primaryButtonStyle}>
+      <div className="min-h-[calc(100vh-60px)] flex items-center justify-center py-10 px-4">
+        <div className="w-full max-w-[500px] border-2 border-border bg-panel px-8 py-12 text-center">
+          <p className="text-text font-bold text-lg mb-6" style={{ fontFamily: 'var(--font-ui)' }}>
+            Profile not found
+          </p>
+          <button
+            onClick={loadRecommendations}
+            className="px-6 py-3 bg-yellow text-bg font-bold text-sm border-2 border-yellow hover:opacity-90 transition-opacity"
+            style={{ fontFamily: 'var(--font-ui)' }}
+          >
             Try Again
           </button>
         </div>
@@ -132,80 +150,125 @@ export const RecommendationsPage: React.FC = () => {
     );
   }
 
-  const progress = ((currentIndex + 1) / recommendations.length) * 100;
+  // Main view ─────────────────────────────────────────────────────────────
 
   return (
-    <div className="mobile-compact-pad" style={containerStyle}>
-      <div style={headerStyle}>
-        <h1 style={titleStyle}>Discover</h1>
-        <div style={progressBarStyle}>
-          <div style={{ ...progressFillStyle, width: `${progress}%` }} />
+    <div className="mobile-compact-pad min-h-[calc(100vh-60px)] flex flex-col items-center py-10 px-4">
+      {/* Header */}
+      <div className="w-full max-w-[500px] mb-6 text-center border-2 border-border">
+        <div className="items-center justify-between bg-surface border-b-2 border-border px-5 py-2">
+          <h1 className="text-2xl font-bold text-text mb-3" style={{ fontFamily: 'var(--font-ui)' }}>
+            Discover
+          </h1>
+          {/* Progress bar */}
+          <div className="w-full h-[4px] bg-surface overflow-hidden mb-2">
+            <div className="h-full bg-yellow transition-[width] duration-500 ease-in-out" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="text-muted text-xs" style={{ fontFamily: 'var(--font-ui)' }}>
+            {currentIndex + 1} of {recommendations.length}
+          </p>
         </div>
-        <p style={progressTextStyle}>
-          {currentIndex + 1} of {recommendations.length}
-        </p>
       </div>
 
-      {error && <div style={smallErrorStyle}>{error}</div>}
+      {/* Inline error */}
+      {error && (
+        <div className="w-full max-w-[500px] mb-4 px-4 py-3 border border-red/30 bg-red/10 text-red text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+          ✕ {error}
+        </div>
+      )}
 
-      <div style={cardWrapperStyle}>
-        <div style={cardStyle} key={currentProfile.id}>
-          {/* Profile Image */}
-          <div className="mobile-shorter-image" style={profileImageContainerStyle}>
+      {/* Card */}
+      <div className="w-full max-w-[500px] mb-8">
+        <div key={currentProfile.id} className="border-2 border-border overflow-hidden bg-panel">
+          {/* Profile image */}
+          <div className="mobile-shorter-image relative h-[450px] overflow-hidden bg-surface">
             {currentProfile.profile_picture_url ? (
-              <img src={currentProfile.profile_picture_url} alt={currentProfile.first_name} style={profileImageStyle} />
+              <img src={currentProfile.profile_picture_url} alt={currentProfile.first_name} className="w-full h-full object-cover" />
             ) : (
-              <div style={imagePlaceholderStyle}>{currentProfile.first_name?.charAt(0) || '?'}</div>
-            )}
-            <div style={imageOverlayStyle}>
-              <div style={nameTagStyle}>
-                <h2 style={nameStyle}>{currentProfile.first_name}</h2>
-                {currentProfile.location && <p style={locationStyle}>📍 {currentProfile.location}</p>}
+              <div className="w-full h-full flex items-center justify-center text-[5rem] font-black text-yellow bg-surface">
+                {currentProfile.first_name?.charAt(0) || '?'}
               </div>
+            )}
+            {/* Name overlay */}
+            <div
+              className="absolute bottom-0 left-0 right-0 px-5 pb-5 pt-10"
+              style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.75) 100%)' }}
+            >
+              <h2 className="text-white font-bold text-3xl mb-1 m-0" style={{ fontFamily: 'var(--font-ui)' }}>
+                {currentProfile.first_name}
+              </h2>
+              {currentProfile.location && (
+                <p className="text-white/90 text-sm m-0" style={{ fontFamily: 'var(--font-ui)' }}>
+                  📍 {currentProfile.location}
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Profile Info */}
-          <div style={profileInfoStyle}>
+          {/* Profile info */}
+          <div className="p-5 flex flex-col gap-4">
+            {/* Bio */}
             {currentProfile.bio && (
-              <div style={bioContainerStyle}>
-                <p style={bioStyle}>{currentProfile.bio}</p>
+              <div className="pb-4 border-b border-border">
+                <p className="text-text text-sm leading-relaxed m-0" style={{ fontFamily: 'var(--font-ui)' }}>
+                  {currentProfile.bio}
+                </p>
               </div>
             )}
 
-            {/* Quick Stats */}
-            {currentBio && (
-              <div style={statsContainerStyle}>
+            {/* Stats */}
+            {currentBio && (currentBio.age || currentBio.relationshipGoal) && (
+              <div className="flex flex-wrap gap-3">
                 {currentBio.age && (
-                  <div style={statBadgeStyle}>
-                    <span style={statLabelStyle}>Age</span>
-                    <span style={statValueStyle}>{currentBio.age}</span>
+                  <div className="flex flex-col gap-1 px-4 py-3 bg-surface border border-border flex-1 min-w-[140px]">
+                    <span className="text-muted text-xs font-bold uppercase tracking-wider" style={{ fontFamily: 'var(--font-ui)' }}>
+                      Age
+                    </span>
+                    <span className="text-text text-sm font-bold" style={{ fontFamily: 'var(--font-ui)' }}>
+                      {currentBio.age}
+                    </span>
                   </div>
                 )}
                 {currentBio.relationshipGoal && (
-                  <div style={statBadgeStyle}>
-                    <span style={statLabelStyle}>Looking for</span>
-                    <span style={statValueStyle}>{currentBio.relationshipGoal}</span>
+                  <div className="flex flex-col gap-1 px-4 py-3 bg-surface border border-border flex-1 min-w-[140px]">
+                    <span className="text-muted text-xs font-bold uppercase tracking-wider" style={{ fontFamily: 'var(--font-ui)' }}>
+                      Looking for
+                    </span>
+                    <span className="text-text text-sm font-bold" style={{ fontFamily: 'var(--font-ui)' }}>
+                      {currentBio.relationshipGoal}
+                    </span>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Bio Tags */}
+            {/* Tags */}
             {currentBio && (
-              <div style={tagsContainerStyle}>
+              <div className="flex flex-wrap gap-2">
                 {currentBio.interests?.map((item) => (
-                  <span key={item} style={tagStyle}>
+                  <span
+                    key={item}
+                    className="px-3 py-1 text-xs font-bold border border-border text-text bg-surface"
+                    style={{ fontFamily: 'var(--font-ui)' }}
+                  >
                     {item}
                   </span>
                 ))}
                 {currentBio.musicGenres?.map((item) => (
-                  <span key={item} style={{ ...tagStyle, backgroundColor: 'rgba(164,89,255,0.15)', color: '#c880ff' }}>
+                  <span
+                    key={item}
+                    className="px-3 py-1 text-xs font-bold border border-border text-[#712693] bg-[#9c5eaa]/30"
+                    style={{ fontFamily: 'var(--font-ui)' }}
+                  >
                     {item}
                   </span>
                 ))}
                 {currentBio.fridayNightActivities?.map((item) => (
-                  <span key={item} style={{ ...tagStyle, backgroundColor: 'rgba(68,209,144,0.15)', color: '#44d190' }}>
+                  <span
+                    key={item}
+                    className="px-3 py-1 text-xs font-bold border border-border text-[#102910] bg-green/50"
+                    style={{ fontFamily: 'var(--font-ui)' }}
+                  >
                     {item.replace(/_/g, ' ')}
                   </span>
                 ))}
@@ -213,305 +276,21 @@ export const RecommendationsPage: React.FC = () => {
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div style={actionsContainerStyle}>
-            <button onClick={handlePass} disabled={actionPending} style={passButtonStyle} title="Not interested">
-              ✕
-            </button>
-            <button onClick={handleLike} disabled={actionPending} style={likeButtonStyle} title="Connect">
-              ❤️
-            </button>
+          {/* Action buttons */}
+          <div className="flex gap-3 px-5 py-4 bg-surface border-t-2 border-border">
+            <div className="w-full [&>button]:w-full">
+              <Btn variant="accept" onClick={handlePass}>
+                Accept
+              </Btn>
+            </div>
+            <div className="w-full [&>button]:w-full">
+              <Btn variant="reject" onClick={handleLike}>
+                Reject️
+              </Btn>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-// ============================================================================
-// Styles
-// ============================================================================
-
-const containerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  minHeight: 'calc(100vh - 60px)',
-  backgroundColor: 'var(--background)',
-  padding: '2rem 1rem',
-};
-
-const headerStyle: React.CSSProperties = {
-  width: '100%',
-  maxWidth: '500px',
-  marginBottom: '2rem',
-  textAlign: 'center',
-};
-
-const titleStyle: React.CSSProperties = {
-  margin: '0 0 1rem 0',
-  fontSize: '2rem',
-  fontWeight: 700,
-  color: 'var(--text)',
-};
-
-const progressBarStyle: React.CSSProperties = {
-  width: '100%',
-  height: '4px',
-  backgroundColor: 'var(--surface-light)',
-  borderRadius: '2px',
-  overflow: 'hidden',
-  marginBottom: '0.75rem',
-};
-
-const progressFillStyle: React.CSSProperties = {
-  height: '100%',
-  background: 'linear-gradient(90deg, var(--primary), #a459ff)',
-  transition: 'width 0.5s ease',
-};
-
-const progressTextStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: '0.85rem',
-  color: 'var(--muted)',
-};
-
-const cardWrapperStyle: React.CSSProperties = {
-  perspective: '1000px',
-  width: '100%',
-  maxWidth: '500px',
-  marginBottom: '2rem',
-};
-
-const cardStyle: React.CSSProperties = {
-  backgroundColor: 'var(--surface)',
-  borderRadius: '24px',
-  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
-  overflow: 'hidden',
-  border: '1px solid var(--border)',
-  animation: 'slideInRight 0.5s ease-out',
-};
-
-const profileImageContainerStyle: React.CSSProperties = {
-  position: 'relative',
-  height: '450px',
-  overflow: 'hidden',
-  backgroundColor: 'var(--surface-light)',
-};
-
-const profileImageStyle: React.CSSProperties = {
-  width: '100%',
-  height: '100%',
-  objectFit: 'cover',
-};
-
-const imagePlaceholderStyle: React.CSSProperties = {
-  width: '100%',
-  height: '100%',
-  backgroundColor: 'linear-gradient(135deg, rgba(124, 152, 255, 0.2), rgba(164, 89, 255, 0.15))',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '5rem',
-  fontWeight: 700,
-  color: 'var(--primary-soft)',
-};
-
-const imageOverlayStyle: React.CSSProperties = {
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  right: 0,
-  background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.7) 100%)',
-  padding: '2rem 1.5rem 1.5rem',
-};
-
-const nameTagStyle: React.CSSProperties = {
-  color: 'white',
-};
-
-const nameStyle: React.CSSProperties = {
-  margin: '0 0 0.5rem 0',
-  fontSize: '1.8rem',
-  fontWeight: 700,
-};
-
-const locationStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: '0.95rem',
-  opacity: 0.9,
-};
-
-const profileInfoStyle: React.CSSProperties = {
-  padding: '1.5rem',
-};
-
-const bioContainerStyle: React.CSSProperties = {
-  marginBottom: '1rem',
-  paddingBottom: '1rem',
-  borderBottom: '1px solid var(--border)',
-};
-
-const bioStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: '0.95rem',
-  lineHeight: '1.6',
-  color: 'var(--text)',
-};
-
-const statsContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: '0.75rem',
-  marginBottom: '1rem',
-};
-
-const statBadgeStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.25rem',
-  padding: '0.75rem 1rem',
-  backgroundColor: 'var(--surface-light)',
-  borderRadius: '12px',
-  flex: 1,
-  minWidth: '150px',
-};
-
-const statLabelStyle: React.CSSProperties = {
-  fontSize: '0.75rem',
-  color: 'var(--muted)',
-  fontWeight: 600,
-  textTransform: 'uppercase',
-};
-
-const statValueStyle: React.CSSProperties = {
-  fontSize: '0.95rem',
-  color: 'var(--text)',
-  fontWeight: 600,
-};
-
-const tagsContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: '0.5rem',
-};
-
-const tagStyle: React.CSSProperties = {
-  display: 'inline-block',
-  padding: '0.5rem 0.875rem',
-  backgroundColor: 'var(--primary-soft)',
-  color: 'var(--primary)',
-  borderRadius: '16px',
-  fontSize: '0.8rem',
-  fontWeight: 600,
-};
-
-const actionsContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  gap: '1rem',
-  padding: '1.5rem',
-  backgroundColor: 'var(--surface-light)',
-  borderTop: '1px solid var(--border)',
-};
-
-const passButtonStyle: React.CSSProperties = {
-  flex: 1,
-  padding: '1rem',
-  background: 'linear-gradient(135deg, rgba(247, 105, 105, 0.25), rgba(200, 60, 60, 0.15))',
-  border: '2px solid rgba(247, 105, 105, 0.6)',
-  color: '#f76969',
-  borderRadius: '16px',
-  fontSize: '1.5rem',
-  fontWeight: 700,
-  cursor: 'pointer',
-  transition: 'all 0.3s ease',
-};
-
-const likeButtonStyle: React.CSSProperties = {
-  flex: 1,
-  padding: '1rem',
-  background: 'linear-gradient(135deg, rgba(68, 209, 144, 0.3), rgba(44, 180, 120, 0.15))',
-  border: '2px solid rgba(68, 209, 144, 0.6)',
-  color: 'white',
-  borderRadius: '16px',
-  fontSize: '1.5rem',
-  fontWeight: 700,
-  cursor: 'pointer',
-  transition: 'all 0.3s ease',
-};
-
-const errorContainerStyle: React.CSSProperties = {
-  textAlign: 'center',
-  padding: '3rem 2rem',
-  backgroundColor: 'var(--surface)',
-  borderRadius: '24px',
-  border: '1px solid var(--border)',
-  maxWidth: '500px',
-};
-
-const errorIconStyle: React.CSSProperties = {
-  fontSize: '4rem',
-  marginBottom: '1rem',
-};
-
-const errorTitleStyle: React.CSSProperties = {
-  fontSize: '1.3rem',
-  fontWeight: 700,
-  margin: '0 0 0.5rem 0',
-};
-
-const errorSubtextStyle: React.CSSProperties = {
-  color: 'var(--muted)',
-  margin: '0 0 2rem 0',
-};
-
-const errorActionsStyle: React.CSSProperties = {
-  display: 'flex',
-  gap: '1rem',
-};
-
-const primaryButtonStyle: React.CSSProperties = {
-  flex: 1,
-  padding: '0.75rem 1.5rem',
-  backgroundColor: 'var(--primary)',
-  color: 'white',
-  border: 'none',
-  borderRadius: '16px',
-  fontWeight: 600,
-  cursor: 'pointer',
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  flex: 1,
-  padding: '0.75rem 1.5rem',
-  backgroundColor: 'transparent',
-  color: 'var(--primary)',
-  border: '2px solid var(--primary)',
-  borderRadius: '16px',
-  fontWeight: 600,
-  cursor: 'pointer',
-};
-
-const smallErrorStyle: React.CSSProperties = {
-  backgroundColor: 'rgba(247, 105, 105, 0.1)',
-  color: '#f8d7da',
-  padding: '0.75rem 1rem',
-  borderRadius: '12px',
-  border: '1px solid rgba(247, 105, 105, 0.3)',
-  marginBottom: '1rem',
-  maxWidth: '500px',
-  fontSize: '0.9rem',
-};
-
-const skeletonImageStyle: React.CSSProperties = {
-  height: '450px',
-  backgroundColor: 'var(--surface-light)',
-  animation: 'shimmer 2s infinite',
-};
-
-const skeletonInfoStyle: React.CSSProperties = {
-  padding: '1.5rem',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.75rem',
 };

@@ -37,8 +37,19 @@ apiClient.interceptors.response.use(
   }
 );
 
+interface BackendProfile {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  aboutMe?: string;
+  profilePicture?: string;
+  maxDistanceKm?: number;
+  latitude?: number;
+  longitude?: number;
+}
+
 // Normalize backend camelCase profile response to the shape pages expect
-function normalizeProfile(data: any): Profile {
+function normalizeProfile(data: BackendProfile): Profile {
   return {
     id: data.id,
     firstName: data.firstName,
@@ -56,7 +67,14 @@ function normalizeProfile(data: any): Profile {
   };
 }
 
-function normalizeUser(data: any): User {
+interface BackendUser {
+  id: string;
+  name: string;
+  profilePicture: string;
+  isOnline: boolean;
+}
+
+function normalizeUser(data: BackendUser): User {
   return {
     id: data.id,
     name: data.name,
@@ -65,7 +83,16 @@ function normalizeUser(data: any): User {
   };
 }
 
-function normalizeMessage(msg: any): Message {
+interface BackendMessage {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+function normalizeMessage(msg: BackendMessage): Message {
   return {
     id: msg.id,
     sender_id: msg.senderId,
@@ -97,7 +124,7 @@ export const profileService = {
     maxDistanceKm?: number;
     latitude?: number;
     longitude?: number;
-  }): Promise<any> => {
+  }): Promise<Profile> => {
     const payload = {
       firstName: data.first_name || '',
       lastName: data.last_name || '',
@@ -117,7 +144,7 @@ export const profileService = {
     fridayNightActivities: string[];
     musicGenres: string[];
     relationshipGoal: string;
-  }): Promise<any> => {
+  }): Promise<BioData> => {
     const response = await apiClient.put('/me/bio', bioData);
     return response.data;
   },
@@ -195,6 +222,11 @@ export const connectionService = {
   },
 };
 
+interface RawChat {
+  id: string;
+  lastMessageTime: string;
+}
+
 export const messageService = {
   sendMessage: async (receiverId: string, content: string): Promise<Message> => {
     const response = await apiClient.post(`/messages?receiverId=${receiverId}`, { content });
@@ -212,7 +244,7 @@ export const messageService = {
   getChats: async (): Promise<{ id: string; lastMessageTime: string }[]> => {
     const response = await apiClient.get('/chats');
     const chats = response.data.chats ?? [];
-    return chats.map((c: any) => ({ id: c.id, lastMessageTime: c.lastMessageTime }));
+    return chats.map((c: RawChat) => ({ id: c.id, lastMessageTime: c.lastMessageTime }));
   },
 
   getUnreadCount: async (): Promise<number> => {

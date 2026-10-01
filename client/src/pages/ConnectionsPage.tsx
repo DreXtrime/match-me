@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { connectionService, profileService } from '../services/api.js';
 import { useWebSocket } from '../hooks/useWebSocket.js';
 import type { User } from '../types';
+import { Btn } from '../components/Btn.tsx';
+import { LoadingScreen } from '../components/Loadingscreen.tsx';
 
 type UserEntry = { id: string; user?: User };
 
@@ -18,7 +20,6 @@ export const ConnectionsPage: React.FC = () => {
     Promise.all([loadConnections(), loadPendingRequests()]).finally(() => setLoading(false));
   }, []);
 
-  // Re-fetch when tab becomes visible again (catches missed WS events while backgrounded)
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
@@ -30,7 +31,6 @@ export const ConnectionsPage: React.FC = () => {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
-  // Re-fetch whenever the WebSocket reconnects (catches missed events during a network blip)
   useEffect(() => {
     if (isConnected) {
       loadConnections();
@@ -45,7 +45,6 @@ export const ConnectionsPage: React.FC = () => {
     };
     const handleOnline = (id: string) => updateOnline(id, true);
     const handleOffline = (id: string) => updateOnline(id, false);
-
     on('user-online', handleOnline);
     on('user-offline', handleOffline);
     return () => {
@@ -92,375 +91,163 @@ export const ConnectionsPage: React.FC = () => {
     }
   };
 
-  const handleAccept = async (connectionId: string) => {
+  const handleAccept = async (id: string) => {
     try {
-      await connectionService.acceptConnection(connectionId);
+      await connectionService.acceptConnection(id);
       await loadPendingRequests();
       await loadConnections();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to accept request');
+      setError(err instanceof Error ? err.message : 'Failed to accept');
     }
   };
 
-  const handleReject = async (connectionId: string) => {
+  const handleReject = async (id: string) => {
     try {
-      await connectionService.rejectConnection(connectionId);
+      await connectionService.rejectConnection(id);
       await loadPendingRequests();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reject request');
+      setError(err instanceof Error ? err.message : 'Failed to reject');
     }
   };
 
-  const handleDisconnect = async (connectionId: string) => {
+  const handleDisconnect = async (id: string) => {
     try {
-      await connectionService.deleteConnection(connectionId);
+      await connectionService.deleteConnection(id);
       await loadConnections();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to disconnect');
     }
   };
 
-  const renderAvatar = (user?: User) => (
-    <div style={avatarWrapStyle}>
-      {user?.profilePicture ? (
-        <img src={user.profilePicture} alt={user.name} style={avatarStyle} />
-      ) : (
-        <div style={avatarPlaceholderStyle}>{user?.name?.charAt(0) ?? '?'}</div>
-      )}
-      {user?.isOnline && <span style={onlineBadgeStyle} />}
-    </div>
-  );
-
   if (loading) {
-    return (
-      <div className="mobile-compact-pad" style={containerStyle}>
-        <div style={loadingStyle}>Loading connections…</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
-    <div className="mobile-compact-pad" style={containerStyle}>
-      <div style={contentStyle}>
-        <header style={headerSectionStyle}>
-          <h1 style={titleStyle}>Connections</h1>
-          <p style={subtitleStyle}>Friends, dates, and everyone in between</p>
-        </header>
+    <div className="w-full min-h-[calc(100vh-60px)] py-10 px-4">
+      <div className="max-w-3xl mx-auto flex flex-col gap-6">
+        {/* ── Page title ── */}
+        <div className="border-2 border-border bg-panel px-6 py-5">
+          <h1 className="text-2xl font-bold text-text mb-1" style={{ fontFamily: 'var(--font-ui)' }}>
+            Connections
+          </h1>
+          <p className="text-muted text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+            Friends, dates, and everyone in between
+          </p>
+        </div>
 
-        {error && <div style={errorStyle}>{error}</div>}
-
-        {pendingRequests.length > 0 && (
-          <section style={sectionStyle}>
-            <h2 style={sectionTitleStyle}>
-              Pending Requests <span style={countBadgeStyle}>{pendingRequests.length}</span>
-            </h2>
-            <div style={listStyle}>
-              {pendingRequests.map((req) => (
-                <div key={req.id} className="mobile-stack" style={cardStyle}>
-                  <div style={userBlockStyle}>
-                    {renderAvatar(req.user)}
-                    <div>
-                      <h3 style={nameStyle}>{req.user?.name || 'User'}</h3>
-                      <p style={subtleStyle}>Wants to connect with you</p>
-                    </div>
-                  </div>
-                  <div className="mobile-grow-buttons" style={actionsStyle}>
-                    <button onClick={() => handleAccept(req.id)} style={acceptButtonStyle}>
-                      ✓ Accept
-                    </button>
-                    <button onClick={() => handleReject(req.id)} style={rejectButtonStyle}>
-                      ✕ Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+        {/* ── Error ── */}
+        {error && (
+          <div className="border-2 border-red bg-red/10 px-5 py-3 text-red text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+            ✕ {error}
+          </div>
         )}
 
-        <section style={sectionStyle}>
-          <h2 style={sectionTitleStyle}>
-            Your Connections <span style={countBadgeStyle}>{connections.length}</span>
-          </h2>
+        {/* ── Pending requests ── */}
+        {pendingRequests.length > 0 && (
+          <Panel label="Pending Requests" count={pendingRequests.length}>
+            {pendingRequests.map((req) => (
+              <UserRow key={req.id} user={req.user} sub="Wants to connect with you">
+                <Btn variant="accept" onClick={() => handleAccept(req.id)}>
+                  ✓ Accept
+                </Btn>
+                <Btn variant="reject" onClick={() => handleReject(req.id)}>
+                  ✕ Reject
+                </Btn>
+              </UserRow>
+            ))}
+          </Panel>
+        )}
+
+        {/* Connections */}
+        <Panel label="Your Connections" count={connections.length}>
           {connections.length === 0 ? (
-            <div style={emptyStateStyle}>
-              <div style={emptyIconStyle}>🤝</div>
-              <p style={emptyTextStyle}>No connections yet</p>
-              <p style={emptySubtextStyle}>Head to Discover to find people with shared interests</p>
-              <button onClick={() => navigate('/recommendations')} style={ctaButtonStyle}>
-                Find Matches
-              </button>
+            <div className="px-6 py-12 flex flex-col items-center gap-4 text-center">
+              <span className="text-5xl">🤝</span>
+              <p className="text-text font-bold text-base" style={{ fontFamily: 'var(--font-ui)' }}>
+                No connections yet
+              </p>
+              <p className="text-muted text-sm max-w-xs" style={{ fontFamily: 'var(--font-ui)' }}>
+                Head to Discover to find people with shared interests
+              </p>
+              <Btn variant="cta" onClick={() => navigate('/recommendations')}>
+                ▶ Find Matches
+              </Btn>
             </div>
           ) : (
-            <div style={listStyle}>
-              {connections.map((conn) => (
-                <div key={conn.id} className="mobile-stack" style={cardStyle}>
-                  <div style={userBlockStyle}>
-                    {renderAvatar(conn.user)}
-                    <div>
-                      <h3 style={nameStyle}>{conn.user?.name || 'User'}</h3>
-                      <p style={subtleStyle}>{conn.user?.isOnline ? '🟢 Online now' : '🔘 Offline'}</p>
-                    </div>
-                  </div>
-                  <div className="mobile-grow-buttons" style={actionsStyle}>
-                    <button onClick={() => navigate(`/users/${conn.id}`)} style={profileButtonStyle}>
-                      Profile
-                    </button>
-                    <button onClick={() => navigate(`/chat/${conn.id}`)} style={chatButtonStyle}>
-                      Chat
-                    </button>
-                    <button onClick={() => handleDisconnect(conn.id)} style={disconnectButtonStyle}>
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            connections.map((conn) => (
+              <UserRow key={conn.id} user={conn.user} sub={conn.user?.isOnline ? '● Online' : '○ Offline'} onlineColor={conn.user?.isOnline}>
+                <Btn variant="ghost" onClick={() => navigate(`/users/${conn.id}`)}>
+                  Profile
+                </Btn>
+                <Btn variant="primary" onClick={() => navigate(`/chat/${conn.id}`)}>
+                  Chat
+                </Btn>
+                <Btn variant="reject" onClick={() => handleDisconnect(conn.id)}>
+                  Remove
+                </Btn>
+              </UserRow>
+            ))
           )}
-        </section>
+        </Panel>
       </div>
     </div>
   );
 };
 
-// ============================================================================
-// Styles
-// ============================================================================
+// Panel ─────────────────────────────────────────────────────────────────────
 
-const containerStyle: React.CSSProperties = {
-  minHeight: 'calc(100vh - 60px)',
-  backgroundColor: 'var(--background)',
-  padding: '2rem 1rem',
-};
+const Panel: React.FC<{ label: string; count: number; children: React.ReactNode }> = ({ label, count, children }) => (
+  <div className="border-2 border-border">
+    {/* panel header bar */}
+    <div className="flex items-center justify-between bg-surface border-b-2 border-border px-5 py-2">
+      <span className="text-yellow font-bold text-sm uppercase tracking-wider" style={{ fontFamily: 'var(--font-ui)' }}>
+        {label}
+      </span>
+      <span className="bg-bg border border-border text-muted text-xs font-bold px-2 py-0.5 tabular-nums" style={{ fontFamily: 'var(--font-ui)' }}>
+        {count}
+      </span>
+    </div>
+    {/* rows */}
+    <div className="bg-panel divide-y divide-border">{children}</div>
+  </div>
+);
 
-const contentStyle: React.CSSProperties = {
-  maxWidth: '800px',
-  margin: '0 auto',
-};
+// UserRow ───────────────────────────────────────────────────────────────────
 
-const headerSectionStyle: React.CSSProperties = {
-  marginBottom: '2rem',
-  paddingBottom: '1.5rem',
-  borderBottom: '1px solid var(--border)',
-};
+const UserRow: React.FC<{
+  user?: User;
+  sub: string;
+  onlineColor?: boolean;
+  children: React.ReactNode;
+}> = ({ user, sub, onlineColor, children }) => (
+  <div className="flex flex-wrap items-center gap-4 px-5 py-4 hover:bg-surface transition-colors">
+    {/* avatar */}
+    <div className="relative shrink-0">
+      {user?.profilePicture ? (
+        <img src={user.profilePicture} alt={user.name} className="w-12 h-12 object-cover border border-border" />
+      ) : (
+        <div
+          className="w-12 h-12 bg-surface border border-border flex items-center justify-center text-yellow font-black text-lg"
+          style={{ fontFamily: 'var(--font-ui)' }}
+        >
+          {user?.name?.charAt(0) ?? '?'}
+        </div>
+      )}
+      {user?.isOnline && <span className="absolute bottom-0 right-0 w-3 h-3 bg-green border-2 border-panel" />}
+    </div>
 
-const titleStyle: React.CSSProperties = {
-  margin: '0 0 0.5rem 0',
-  fontSize: '2rem',
-  fontWeight: 700,
-  color: 'var(--text)',
-};
+    {/* name + status */}
+    <div className="flex-1 min-w-0">
+      <p className="text-text font-bold text-base truncate" style={{ fontFamily: 'var(--font-ui)' }}>
+        {user?.name || 'User'}
+      </p>
+      <p className={`text-sm mt-0.5 truncate ${onlineColor ? 'text-green' : 'text-muted'}`} style={{ fontFamily: 'var(--font-ui)' }}>
+        {sub}
+      </p>
+    </div>
 
-const subtitleStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: '0.95rem',
-  color: 'var(--muted)',
-};
-
-const sectionStyle: React.CSSProperties = {
-  marginBottom: '2.5rem',
-};
-
-const sectionTitleStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.6rem',
-  margin: '0 0 1rem 0',
-  fontSize: '0.85rem',
-  fontWeight: 700,
-  textTransform: 'uppercase',
-  letterSpacing: '0.08em',
-  color: 'var(--muted)',
-};
-
-const countBadgeStyle: React.CSSProperties = {
-  backgroundColor: 'var(--primary-soft)',
-  color: 'var(--primary)',
-  padding: '0.15rem 0.55rem',
-  borderRadius: '999px',
-  fontSize: '0.75rem',
-  fontWeight: 700,
-};
-
-const listStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.875rem',
-};
-
-const cardStyle: React.CSSProperties = {
-  backgroundColor: 'var(--surface)',
-  border: '1px solid var(--border)',
-  padding: '1rem 1.25rem',
-  borderRadius: '16px',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  gap: '1rem',
-  transition: 'all 0.25s ease',
-};
-
-const userBlockStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1rem',
-  flex: 1,
-  minWidth: 0,
-};
-
-const avatarWrapStyle: React.CSSProperties = {
-  position: 'relative',
-  flexShrink: 0,
-};
-
-const avatarStyle: React.CSSProperties = {
-  width: '48px',
-  height: '48px',
-  borderRadius: '50%',
-  objectFit: 'cover',
-  border: '2px solid var(--primary)',
-};
-
-const avatarPlaceholderStyle: React.CSSProperties = {
-  width: '48px',
-  height: '48px',
-  borderRadius: '50%',
-  backgroundColor: 'var(--primary-soft)',
-  color: 'var(--primary)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '1.3rem',
-  fontWeight: 700,
-  border: '2px solid var(--primary)',
-};
-
-const onlineBadgeStyle: React.CSSProperties = {
-  position: 'absolute',
-  bottom: 0,
-  right: 0,
-  width: '14px',
-  height: '14px',
-  borderRadius: '50%',
-  backgroundColor: 'var(--success)',
-  border: '2px solid var(--surface)',
-};
-
-const nameStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: '1.05rem',
-  fontWeight: 600,
-  color: 'var(--text)',
-};
-
-const subtleStyle: React.CSSProperties = {
-  margin: '0.2rem 0 0 0',
-  fontSize: '0.85rem',
-  color: 'var(--muted)',
-};
-
-const actionsStyle: React.CSSProperties = {
-  display: 'flex',
-  gap: '0.5rem',
-  flexShrink: 0,
-};
-
-const baseButton: React.CSSProperties = {
-  padding: '0.55rem 1.1rem',
-  borderRadius: '12px',
-  fontSize: '0.875rem',
-  fontWeight: 600,
-  cursor: 'pointer',
-  transition: 'all 0.2s ease',
-};
-
-const acceptButtonStyle: React.CSSProperties = {
-  ...baseButton,
-  background: 'linear-gradient(135deg, var(--success), #2cb478)',
-  color: 'white',
-  border: 'none',
-  boxShadow: '0 6px 18px rgba(68, 209, 144, 0.25)',
-};
-
-const rejectButtonStyle: React.CSSProperties = {
-  ...baseButton,
-  background: 'rgba(247, 105, 105, 0.12)',
-  color: 'var(--danger)',
-  border: '1px solid rgba(247, 105, 105, 0.4)',
-};
-
-const profileButtonStyle: React.CSSProperties = {
-  ...baseButton,
-  background: 'rgba(124, 152, 255, 0.15)',
-  color: 'white',
-  border: '1px solid var(--primary)',
-};
-
-const chatButtonStyle: React.CSSProperties = {
-  ...baseButton,
-  background: 'rgba(124, 152, 255, 0.15)',
-  color: 'white',
-  border: '1px solid var(--primary)',
-};
-
-const disconnectButtonStyle: React.CSSProperties = {
-  ...baseButton,
-  background: 'rgba(124, 152, 255, 0.15)',
-  color: 'white',
-  border: '1px solid var(--primary)',
-};
-
-const emptyStateStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '3rem 2rem',
-  textAlign: 'center',
-  backgroundColor: 'var(--surface)',
-  border: '1px solid var(--border)',
-  borderRadius: '16px',
-};
-
-const emptyIconStyle: React.CSSProperties = {
-  fontSize: '3rem',
-  marginBottom: '1rem',
-};
-
-const emptyTextStyle: React.CSSProperties = {
-  fontSize: '1.15rem',
-  fontWeight: 600,
-  color: 'var(--text)',
-  margin: '0 0 0.5rem 0',
-};
-
-const emptySubtextStyle: React.CSSProperties = {
-  fontSize: '0.9rem',
-  color: 'var(--muted)',
-  margin: '0 0 1.5rem 0',
-};
-
-const ctaButtonStyle: React.CSSProperties = {
-  ...baseButton,
-  padding: '0.75rem 1.75rem',
-  background: 'linear-gradient(135deg, var(--primary), #536dff)',
-  color: 'white',
-  border: 'none',
-  boxShadow: '0 8px 24px rgba(124, 152, 255, 0.3)',
-};
-
-const loadingStyle: React.CSSProperties = {
-  textAlign: 'center',
-  color: 'var(--muted)',
-  fontSize: '1rem',
-  paddingTop: '4rem',
-};
-
-const errorStyle: React.CSSProperties = {
-  backgroundColor: 'rgba(247, 105, 105, 0.1)',
-  border: '1px solid rgba(247, 105, 105, 0.3)',
-  color: '#f8d7da',
-  padding: '1rem',
-  borderRadius: '12px',
-  marginBottom: '1.5rem',
-};
+    {/* action buttons */}
+    <div className="flex gap-2 shrink-0 flex-wrap">{children}</div>
+  </div>
+);

@@ -1,42 +1,35 @@
-:root {
-  font-family: 'Sora', 'Inter', system-ui, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import 'tailwindcss';
 
-  color: #eef2ff;
-  background-color: #08101d;
+/* ============================================================================
+ * Theme Tailwind v4
+ * ========================================================================== */
 
-  --background: #08101d;
-  --surface: rgba(17, 24, 39, 0.95);
-  --surface-light: rgba(26, 35, 59, 0.9);
-  --surface-strong: rgba(12, 20, 34, 0.98);
-  --border: rgba(255, 255, 255, 0.08);
-  --text: #eef2ff;
-  --muted: #9bb2d6;
-  --primary: #7c98ff;
-  --primary-soft: rgba(124, 152, 255, 0.18);
-  --danger: #f76969;
-  --success: #44d190;
-  --warning: #ffa500;
-  --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+@theme {
+  /* Colors */
+  --color-bg: #a0c0da;
+  --color-panel: #f3f4df;
+  --color-surface: #ffc96d;
+  --color-border: #414b59;
+  --color-border-dim: #1e2d4a;
+
+  --color-text: #7c0606;
+  --color-muted: #8629d9;
+  --color-dim: #5f2aa2;
+
+  --color-yellow: #413207;
+  --color-yellow-hot: #ffd84a;
+  --color-link: #2084fa;
+  --color-red: #cc3333;
+  --color-green: #44aa44;
+
+  /* Fonts */
+  --font-ui: 'Trebuchet MS', 'Arial', sans-serif;
+  --font-body: 'Verdana', 'Geneva', sans-serif;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  min-width: 320px;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(124, 152, 255, 0.18), transparent 22%),
-    radial-gradient(circle at bottom right, rgba(164, 89, 255, 0.14), transparent 20%), linear-gradient(180deg, #02060f 0%, #08101d 100%);
-  color: var(--text);
-}
-
-#root {
-  width: 100%;
-  flex: 1;
-}
+/* ============================================================================
+ * Reset
+ * ========================================================================== */
 
 *,
 *::before,
@@ -44,146 +37,162 @@ body {
   box-sizing: border-box;
 }
 
-body,
-button,
-input,
-select,
-textarea {
-  font-family: inherit;
+/* ============================================================================
+ * Document
+ * ========================================================================== */
+
+html {
+  font-size: 14px;
+  scroll-behavior: smooth;
 }
 
-button {
-  border-radius: 16px;
-  border: 1px solid transparent;
-  padding: 0.85em 1.4em;
-  font-size: 1em;
-  font-weight: 600;
-  background: linear-gradient(135deg, var(--primary), #536dff);
-  color: white;
-  cursor: pointer;
-  box-shadow: 0 0 40px rgba(79, 134, 255, 0.18);
-  transition:
-    transform 0.2s ease,
-    opacity 0.2s ease,
-    box-shadow 0.2s ease;
+body {
+  font-family: var(--font-body);
+  line-height: 1.6;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+
+  /* dot grid base layer */
+  background-image: radial-gradient(circle, rgba(42, 58, 92, 0.8) 1px, transparent 1px);
+  background-size: 24px 24px;
+
+  /* scanline overlay on top of the dot grid */
+  position: relative;
 }
 
-button:hover {
-  transform: translateY(-1px);
-  opacity: 0.98;
+/* scanlines  */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent, transparent 3px, rgba(0, 0, 0, 0.07) 3px, rgba(0, 0, 0, 0.07) 4px);
 }
 
-button:hover,
-button:focus-visible {
-  outline: 2px solid rgba(124, 152, 255, 0.7);
-  outline-offset: 3px;
+#root {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-button:focus:not(:focus-visible) {
-  outline: none;
-}
+/* ============================================================================
+ * Typography
+ * ========================================================================== */
 
-input,
-select,
-textarea {
-  background-color: rgba(255, 255, 255, 0.04);
-  color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 0.95rem 1rem;
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: rgba(124, 152, 255, 0.9);
-  background-color: rgba(255, 255, 255, 0.06);
-  outline: none;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: rgba(255, 255, 255, 0.55);
-}
-
-a {
-  color: var(--primary);
-  text-decoration: none;
-}
-
-a:hover {
-  opacity: 0.9;
-}
-
-p,
 h1,
 h2,
 h3,
 h4,
 h5,
-h6,
-label {
-  color: var(--text);
+h6 {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  line-height: 1.2;
 }
 
-::selection {
-  background: rgba(124, 152, 255, 0.35);
+a {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
-/* Custom scrollbar — Chrome, Edge, Safari */
+a:hover {
+  color: var(--color-yellow);
+  text-decoration: none;
+}
+
+/* ============================================================================
+ * Buttons + inputs
+ * ========================================================================== */
+
+@layer base {
+  button {
+    /*all: unset;*/
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-ui);
+    touch-action: manipulation;
+  }
+}
+
+button:focus-visible {
+  outline: 2px solid var(--color-yellow);
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0;
+  width: 100%;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--color-yellow);
+  outline-offset: 0;
+  border-color: var(--color-yellow);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-dim);
+}
+
+/* ============================================================================
+ * Scrollbar
+ * ========================================================================== */
+
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
-
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--color-bg);
 }
-
 ::-webkit-scrollbar-thumb {
-  background: rgba(124, 152, 255, 0.25);
-  border-radius: 999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: var(--color-border);
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(124, 152, 255, 0.45);
-  background-clip: padding-box;
-  border: 2px solid transparent;
+  background: #3a4a6c;
 }
 
-::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-/* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(124, 152, 255, 0.25) transparent;
+  scrollbar-color: var(--color-border) var(--color-bg);
 }
 
-/* Animations */
-@keyframes typing {
-  0%,
-  60%,
-  100% {
-    opacity: 0.5;
-    transform: translateY(0);
-  }
-  30% {
-    opacity: 1;
-    transform: translateY(-8px);
-  }
+/* ============================================================================
+ * Selection
+ * ========================================================================== */
+
+::selection {
+  background: var(--color-yellow);
+  color: var(--color-bg);
 }
+
+/* ============================================================================
+ * Animations
+ * ========================================================================== */
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -194,7 +203,7 @@ label {
 @keyframes slideInRight {
   from {
     opacity: 0;
-    transform: translateX(30px);
+    transform: translateX(20px);
   }
   to {
     opacity: 1;
@@ -205,7 +214,7 @@ label {
 @keyframes slideInLeft {
   from {
     opacity: 0;
-    transform: translateX(-30px);
+    transform: translateX(-20px);
   }
   to {
     opacity: 1;
@@ -213,128 +222,34 @@ label {
   }
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes heartBeat {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  14% {
-    transform: scale(1.15);
-  }
-  28% {
-    transform: scale(1);
-  }
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-/* Page transitions */
 .page-enter {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.2s ease-out;
 }
-
-.page-enter-active {
-  animation: fadeIn 0.3s ease-out;
-}
-
-/* Card animations */
-.card {
-  animation: scaleIn 0.4s ease-out;
-}
-
-.card:hover {
-  box-shadow: 0 24px 80px rgba(124, 152, 255, 0.25);
-  transition: box-shadow 0.3s ease;
-}
-
-/* Button animations */
-.btn-like {
-  animation: heartBeat 0.6s ease-in-out;
-}
-
-.btn-like:hover {
-  animation: heartBeat 0.6s ease-in-out;
-}
-
-/* Recommend profile card animations */
 .profile-card {
-  animation: slideInRight 0.5s ease-out;
+  animation: slideInRight 0.3s ease-out;
 }
-
 .profile-card.exit {
-  animation: slideInLeft 0.3s ease-out;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:focus-visible,
-  button:focus-visible {
-    outline: 2px solid rgba(124, 152, 255, 0.7);
-    outline-offset: 3px;
-  }
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-@media (max-width: 768px) {
-  body {
-    font-size: 14px;
-  }
-
-  /* Prevent iOS auto-zoom when focusing inputs */
-  input,
-  select,
-  textarea {
-    font-size: 16px !important;
-  }
-
-  /* Touch-friendly minimum tap targets */
-  button {
-    min-height: 44px;
-    touch-action: manipulation;
-  }
-
-  /* Remove the blue tap-flash on iOS/Android */
-  * {
-    -webkit-tap-highlight-color: transparent;
-  }
+  animation: slideInLeft 0.2s ease-out;
 }
 
 /* ============================================================================
- * Mobile-responsive utility classes
- * Apply via className alongside inline styles; only activate below 768px.
+ * Mobile utilities
  * ========================================================================== */
+
 @media (max-width: 768px) {
-  /* Card spans full viewport — no margins, no rounded corners (chat-style) */
+  html {
+    font-size: 13px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  button {
+    min-height: 44px;
+  }
+
   .mobile-edge-card {
     border-radius: 0 !important;
     border-left: none !important;
@@ -345,59 +260,18 @@ html {
     margin: 0 !important;
   }
 
-  /* Remove all padding on mobile (use for containers wrapping edge-to-edge cards) */
   .mobile-no-pad {
     padding: 0 !important;
   }
-
-  /* Stack a horizontal flex row into a vertical column */
-  .mobile-stack {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 0.75rem !important;
-  }
-
-  /* Make every button inside this container grow to share width equally */
-  .mobile-grow-buttons > button {
-    flex: 1 !important;
-    width: 100%;
-  }
-
-  /* Collapse heavy 2-3rem padding to a single rem */
-  .mobile-compact-pad {
-    padding: 1rem !important;
-  }
-
-  /* Remove only horizontal padding (useful for full-bleed sections) */
   .mobile-no-pad-x {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
-
-  /* Shorter hero image on small screens */
+  .mobile-compact-pad {
+    padding: 1rem !important;
+  }
   .mobile-shorter-image {
     height: 60vw !important;
     max-height: 380px !important;
-  }
-}
-
-/* Navbar responsive */
-.nav-links {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.mobile-menu-toggle {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .nav-links {
-    display: none;
-  }
-
-  .mobile-menu-toggle {
-    display: block;
   }
 }

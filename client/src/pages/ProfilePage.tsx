@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { profileService } from '../services/api.js';
+import { Btn } from '../components/Btn.tsx';
+import { LoadingScreen } from '../components/Loadingscreen.tsx';
 
 const INTERESTS = ['gaming', 'fitness', 'music', 'programming', 'art', 'reading', 'travel', 'food', 'movies', 'sports'];
 const FRIDAY_NIGHT_ACTIVITIES = [
@@ -122,228 +124,304 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  if (loading) return <div style={containerStyle}>Loading profile...</div>;
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
-    <div style={containerStyle}>
-      <div style={formContainerStyle}>
-        <h2>Edit Your Profile</h2>
-        {error && <div style={errorStyle}>{error}</div>}
-        {success && <div style={successStyle}>{success}</div>}
+    <div className="w-full min-h-[calc(100vh-60px)] py-10 px-4">
+      <div className="max-w-[600px] mx-auto flex flex-col gap-6">
+        {/* Page title */}
+        <div className="border-2 border-border bg-panel px-6 py-5">
+          <h1 className="text-2xl font-bold text-text mb-1" style={{ fontFamily: 'var(--font-ui)' }}>
+            Edit Profile
+          </h1>
+          <p className="text-muted text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+            Keep your profile up to date
+          </p>
+        </div>
 
-        <form onSubmit={handleSave} style={formStyle}>
-          <div style={formGroupStyle}>
-            <label>First Name *</label>
-            <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required style={inputStyle} />
+        {/* Error */}
+        {error && (
+          <div className="border-2 border-red bg-red/10 px-5 py-3 text-red text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+            ✕ {error}
           </div>
+        )}
 
-          <div style={formGroupStyle}>
-            <label>Last Name</label>
-            <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} style={inputStyle} />
+        {/* Success */}
+        {success && (
+          <div className="border-2 border-green bg-green-800/80 px-5 py-3 text-green-400 text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+            ✓ {success}
           </div>
+        )}
 
-          <div style={formGroupStyle}>
-            <label>About Me</label>
-            <textarea
-              value={aboutMe}
-              onChange={(e) => setAboutMe(e.target.value)}
-              placeholder="Tell us about yourself..."
-              style={{ ...inputStyle, minHeight: '100px', fontFamily: 'inherit', resize: 'vertical' }}
-            />
-          </div>
-
-          <div style={formGroupStyle}>
-            <label>Profile Picture URL</label>
-            <input
-              type="url"
-              value={profilePictureUrl}
-              onChange={(e) => setProfilePictureUrl(e.target.value)}
-              placeholder="https://example.com/photo.jpg"
-              style={inputStyle}
-            />
-            {profilePictureUrl && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
-                <img
-                  src={profilePictureUrl}
-                  alt="Preview"
-                  style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }}
-                  onError={(e) => (e.currentTarget.style.display = 'none')}
+        {/* Form sheet */}
+        <form onSubmit={handleSave} className="border-2 border-border">
+          {/* Basic Info ─────────────────────────────────────────── */}
+          <SectionHeader label="Basic Info" />
+          <div className="bg-panel px-5 py-5 flex flex-col gap-5 border-b-2 border-border">
+            <div className="flex gap-4">
+              <Field label="First Name *" className="flex-1">
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  className={inputClass}
+                  style={{ fontFamily: 'var(--font-ui)' }}
                 />
-                <button
-                  type="button"
-                  onClick={() => setProfilePictureUrl('')}
-                  style={{ ...secondaryButtonStyle, color: '#f76969', borderColor: '#f76969' }}
-                >
-                  Remove
-                </button>
+              </Field>
+              <Field label="Last Name" className="flex-1">
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className={inputClass}
+                  style={{ fontFamily: 'var(--font-ui)' }}
+                />
+              </Field>
+            </div>
+
+            <Field label="Age *" className="max-w-[120px]">
+              <input
+                type="number"
+                min={18}
+                max={120}
+                value={age}
+                onChange={(e) => setAge(Number(e.target.value))}
+                required
+                className={inputClass}
+                style={{ fontFamily: 'var(--font-ui)' }}
+              />
+            </Field>
+
+            <Field label="About Me">
+              <textarea
+                value={aboutMe}
+                onChange={(e) => setAboutMe(e.target.value)}
+                placeholder="Tell us about yourself..."
+                rows={4}
+                className={`${inputClass} resize-vertical`}
+                style={{ fontFamily: 'var(--font-ui)' }}
+              />
+            </Field>
+
+            <Field label="Profile Picture URL">
+              <input
+                type="url"
+                value={profilePictureUrl}
+                onChange={(e) => setProfilePictureUrl(e.target.value)}
+                placeholder="https://example.com/photo.jpg"
+                className={inputClass}
+                style={{ fontFamily: 'var(--font-ui)' }}
+              />
+              {profilePictureUrl && (
+                <div className="flex items-center gap-3 mt-2">
+                  <img
+                    src={profilePictureUrl}
+                    alt="Preview"
+                    className="w-14 h-14 object-cover border border-border"
+                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setProfilePictureUrl('')}
+                    className="px-3 py-1.5 text-xs font-bold border border-red/60 text-red bg-red/10 hover:bg-red/20 transition-colors"
+                    style={{ fontFamily: 'var(--font-ui)' }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </Field>
+          </div>
+
+          {/* Looking For ────────────────────────────────────────── */}
+          <SectionHeader label="Looking For" />
+          <div className="bg-panel px-5 py-5 border-b-2 border-border">
+            <Field label="What are you looking for? *">
+              <div className="flex flex-wrap gap-2 mt-1">
+                {RELATIONSHIP_GOALS.map((goal) => (
+                  <ChipLookingFor key={goal} label={goal} selected={relationshipGoal === goal} onClick={() => setRelationshipGoal(goal)} />
+                ))}
               </div>
-            )}
+            </Field>
           </div>
 
-          <div style={formGroupStyle}>
-            <label>Age *</label>
-            <input type="number" min={18} max={120} value={age} onChange={(e) => setAge(Number(e.target.value))} required style={inputStyle} />
-          </div>
-
-          <div style={formGroupStyle}>
-            <label>What are you looking for? *</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {RELATIONSHIP_GOALS.map((goal) => (
-                <button key={goal} type="button" onClick={() => setRelationshipGoal(goal)} style={chipStyleFor(relationshipGoal === goal)}>
-                  {goal}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={formGroupStyle}>
-            <label>Interests</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+          {/* Interests ──────────────────────────────────────────── */}
+          <SectionHeader label="Interests" />
+          <div className="bg-panel px-5 py-5 border-b-2 border-border">
+            <div className="flex flex-wrap gap-2">
               {INTERESTS.map((item) => (
-                <button
+                <ChipInterests
                   key={item}
-                  type="button"
+                  label={item}
+                  selected={selectedInterests.includes(item)}
                   onClick={() => toggle(setSelectedInterests, item)}
-                  style={chipStyleFor(selectedInterests.includes(item))}
-                >
-                  {item}
-                </button>
+                />
               ))}
             </div>
           </div>
 
-          <div style={formGroupStyle}>
-            <label>Friday Night Activities</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+          {/* Friday Night ───────────────────────────────────────── */}
+          <SectionHeader label="Friday Night Activities" />
+          <div className="bg-panel px-5 py-5 border-b-2 border-border">
+            <div className="flex flex-wrap gap-2">
               {FRIDAY_NIGHT_ACTIVITIES.map((item) => (
-                <button
+                <ChipFridayNight
                   key={item}
-                  type="button"
+                  label={item.replace(/_/g, ' ')}
+                  selected={selectedActivities.includes(item)}
                   onClick={() => toggle(setSelectedActivities, item)}
-                  style={chipStyleFor(selectedActivities.includes(item))}
-                >
-                  {item.replace(/_/g, ' ')}
-                </button>
+                />
               ))}
             </div>
           </div>
 
-          <div style={formGroupStyle}>
-            <label>Favourite Music</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+          {/* Music ──────────────────────────────────────────────── */}
+          <SectionHeader label="Favourite Music" />
+          <div className="bg-panel px-5 py-5 border-b-2 border-border">
+            <div className="flex flex-wrap gap-2">
               {MUSIC_GENRES.map((item) => (
-                <button key={item} type="button" onClick={() => toggle(setSelectedMusic, item)} style={chipStyleFor(selectedMusic.includes(item))}>
-                  {item}
-                </button>
+                <ChipMusic key={item} label={item} selected={selectedMusic.includes(item)} onClick={() => toggle(setSelectedMusic, item)} />
               ))}
             </div>
           </div>
 
-          <div style={formGroupStyle}>
-            <label>Maximum match distance (km)</label>
-            <input
-              type="number"
-              min={5}
-              max={500}
-              value={maxDistanceKm}
-              onChange={(e) => setMaxDistanceKm(Number(e.target.value))}
-              style={inputStyle}
-            />
+          {/* Discovery ──────────────────────────────────────────── */}
+          <SectionHeader label="Discovery" />
+          <div className="bg-panel px-5 py-5 flex flex-col gap-5 border-b-2 border-border">
+            <Field label="Maximum match distance (km)" className="max-w-[180px]">
+              <input
+                type="number"
+                min={5}
+                max={500}
+                value={maxDistanceKm}
+                onChange={(e) => setMaxDistanceKm(Number(e.target.value))}
+                className={inputClass}
+                style={{ fontFamily: 'var(--font-ui)' }}
+              />
+            </Field>
+
+            <Field label="Location">
+              <button
+                type="button"
+                onClick={handleUseCurrentLocation}
+                className="px-4 py-2 text-sm font-bold border border-border text-text bg-surface hover:bg-bg transition-colors w-fit"
+                style={{ fontFamily: 'var(--font-ui)' }}
+              >
+                Use My Current Location
+              </button>
+              {locationMessage && (
+                <small className="text-muted text-xs mt-1 block" style={{ fontFamily: 'var(--font-ui)' }}>
+                  {locationMessage}
+                </small>
+              )}
+              {latitude && (
+                <small className="text-green text-xs block" style={{ fontFamily: 'var(--font-ui)' }}>
+                  GPS: {latitude.toFixed(4)}, {longitude?.toFixed(4)}
+                </small>
+              )}
+            </Field>
           </div>
 
-          <div style={formGroupStyle}>
-            <label>Location</label>
-            <button type="button" onClick={handleUseCurrentLocation} style={secondaryButtonStyle}>
-              Use My Current Location
-            </button>
-            {locationMessage && <small style={{ color: 'var(--muted)', marginTop: '0.25rem' }}>{locationMessage}</small>}
-            {latitude && (
-              <small style={{ color: '#44d190' }}>
-                GPS: {latitude.toFixed(4)}, {longitude?.toFixed(4)}
-              </small>
-            )}
+          {/* Submit ─────────────────────────────────────────────── */}
+          <div className="bg-surface px-5 py-4">
+            <Btn variant="accept" onClick={() => {}}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Btn>
           </div>
 
-          <button type="submit" disabled={saving} style={buttonStyle}>
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
+          {/* Success */}
+          {success && (
+            <div className="border-2 border-green bg-green-800/80 px-5 py-3 text-green-400 text-sm" style={{ fontFamily: 'var(--font-ui)' }}>
+              ✓ {success}
+            </div>
+          )}
         </form>
       </div>
     </div>
   );
 };
 
-const containerStyle: React.CSSProperties = { minHeight: 'calc(100vh - 60px)', backgroundColor: 'var(--background)', padding: '2rem 1rem' };
+// Helpers ───────────────────────────────────────────────────────────────────
 
-const formContainerStyle: React.CSSProperties = {
-  backgroundColor: 'var(--surface)',
-  padding: '2rem',
-  borderRadius: '16px',
-  boxShadow: 'var(--shadow)',
-  width: '100%',
-  maxWidth: '600px',
-  margin: '0 auto',
-  border: '1px solid var(--border)',
-};
+const inputClass =
+  'w-full px-4 py-2.5 bg-bg border border-border text-text text-sm placeholder:text-muted focus:outline-none focus:border-yellow transition-colors';
 
-const formStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '1.5rem' };
-const formGroupStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '0.5rem' };
+const SectionHeader: React.FC<{ label: string }> = ({ label }) => (
+  <div className="bg-surface border-b-2 border-border px-5 py-2">
+    <span className="text-yellow font-bold text-sm uppercase tracking-wider" style={{ fontFamily: 'var(--font-ui)' }}>
+      {label}
+    </span>
+  </div>
+);
 
-const inputStyle: React.CSSProperties = {
-  padding: '0.75rem',
-  border: '1px solid var(--border)',
-  borderRadius: '12px',
-  fontSize: '1rem',
-  backgroundColor: 'var(--surface-light)',
-  color: 'var(--text)',
-};
+const Field: React.FC<{ label: string; children: React.ReactNode; className?: string }> = ({ label, children, className }) => (
+  <div className={`flex flex-col gap-1.5 ${className ?? ''}`}>
+    <label className="text-muted text-xs font-bold uppercase tracking-wider" style={{ fontFamily: 'var(--font-ui)' }}>
+      {label}
+    </label>
+    {children}
+  </div>
+);
 
-const buttonStyle: React.CSSProperties = {
-  padding: '0.875rem',
-  backgroundColor: 'var(--primary)',
-  color: 'white',
-  border: 'none',
-  borderRadius: '12px',
-  fontSize: '1rem',
-  fontWeight: 600,
-  cursor: 'pointer',
-};
+const ChipLookingFor: React.FC<{ label: string; selected: boolean; onClick: () => void }> = ({ label, selected, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`px-3 py-1.5 text-xs font-bold border transition-colors ${
+      selected
+        ? 'px-3 py-1 text-xs font-bold border border-border text-red bg-red/30'
+        : 'px-3 py-1 text-xs font-bold border border-border text-red bg-red/3'
+    }`}
+    style={{ fontFamily: 'var(--font-ui)' }}
+  >
+    {label}
+  </button>
+);
 
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  backgroundColor: 'transparent',
-  border: '1px solid var(--border)',
-  borderRadius: '12px',
-  color: 'var(--text)',
-  fontSize: '0.9rem',
-  cursor: 'pointer',
-  width: 'fit-content',
-};
+const ChipInterests: React.FC<{ label: string; selected: boolean; onClick: () => void }> = ({ label, selected, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`px-3 py-1.5 text-xs font-bold border transition-colors ${
+      selected
+        ? 'px-3 py-1 text-xs font-bold border border-border text-text bg-surface'
+        : 'px-3 py-1 text-xs font-bold border border-border text-text bg-surface/5'
+    }`}
+    style={{ fontFamily: 'var(--font-ui)' }}
+  >
+    {label}
+  </button>
+);
 
-const chipStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  border: '1px solid var(--border)',
-  borderRadius: '20px',
-  cursor: 'pointer',
-  fontSize: '0.9rem',
-  transition: 'all 0.2s',
-};
+const ChipFridayNight: React.FC<{ label: string; selected: boolean; onClick: () => void }> = ({ label, selected, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`px-3 py-1.5 text-xs font-bold border transition-colors ${
+      selected
+        ? 'px-3 py-1 text-xs font-bold border border-border text-[#102910] bg-green/50'
+        : 'px-3 py-1 text-xs font-bold border border-border text-[#102910] bg-green/5'
+    }`}
+    style={{ fontFamily: 'var(--font-ui)' }}
+  >
+    {label}
+  </button>
+);
 
-const chipStyleFor = (selected: boolean): React.CSSProperties => ({
-  ...chipStyle,
-  background: selected ? 'var(--primary)' : 'rgba(124, 152, 255, 0.04)',
-  border: selected ? '2px solid var(--primary)' : '1px solid rgba(255, 255, 255, 0.1)',
-  color: 'white',
-  fontWeight: selected ? 700 : 400,
-  boxShadow: selected ? '0 0 10px rgba(124, 152, 255, 0.5)' : 'none',
-  transform: selected ? 'scale(1.05)' : 'scale(1)',
-});
-
-const errorStyle: React.CSSProperties = { backgroundColor: '#451616', color: '#f8d7da', padding: '1rem', borderRadius: '12px', marginBottom: '1rem' };
-const successStyle: React.CSSProperties = {
-  backgroundColor: '#1d3524',
-  color: '#b7f3d0',
-  padding: '1rem',
-  borderRadius: '12px',
-  marginBottom: '1rem',
-};
+const ChipMusic: React.FC<{ label: string; selected: boolean; onClick: () => void }> = ({ label, selected, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`px-3 py-1.5 text-xs font-bold border transition-colors ${
+      selected
+        ? 'px-3 py-1 text-xs font-bold border border-border text-[#712693] bg-[#9c5eaa]/30'
+        : 'px-3 py-1 text-xs font-bold border border-border text-[#712693] bg-[#9c5eaa]/3'
+    }`}
+    style={{ fontFamily: 'var(--font-ui)' }}
+  >
+    {label}
+  </button>
+);
